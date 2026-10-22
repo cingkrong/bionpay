@@ -1,7 +1,7 @@
 {
   "name": "bionpay",
   "version": "1.0.0",
-  "description": "BionPay - Self-Hosted GoPay Merchant Payment Gateway & Dynamic QRIS Engine",
+  "description": "BionPay - Self-Hosted GoPay & ShopeePay Unified Merchant Payment Gateway & Dynamic QRIS Engine",
   "repository": {
     "type": "git",
     "url": "https://github.com/cingkrong/bionpay.git"
