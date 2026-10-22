@@ -22,7 +22,7 @@
             --accent-foreground: #ffffff;
             --text-primary: #f4f4f5;
             --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
+            --text-muted: #94949e;
             --success: #10b981;
             --success-subtle: rgba(16, 185, 129, 0.12);
             --warning: #f59e0b;
@@ -148,17 +148,17 @@
             height: 8px;
             border-radius: 50%;
             background: var(--success);
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
         }
 
         .status-dot.danger {
             background: var(--danger);
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
         }
 
         .status-dot.warning {
             background: var(--warning);
-            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
         }
 
         .btn {
@@ -173,11 +173,11 @@
             cursor: pointer;
             border: 1px solid transparent;
             user-select: none;
-            transition: background-color 140ms ease-out, transform 60ms ease-out, border-color 140ms ease-out;
+            transition: background-color 140ms ease-out, transform 60ms ease-out, border-color 140ms ease-out, opacity 140ms ease-out;
             font-family: inherit;
         }
 
-        .btn:active {
+        .btn:active:not(:disabled) {
             transform: scale(0.98);
         }
 
@@ -186,12 +186,19 @@
             outline-offset: 2px;
         }
 
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+            pointer-events: none;
+        }
+
         .btn-primary {
             background: var(--accent-primary);
             color: var(--accent-foreground);
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: var(--accent-hover);
         }
 
@@ -201,7 +208,7 @@
             border-color: var(--border-subtle);
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background: var(--bg-surface-hover);
             border-color: var(--border-hover);
         }
@@ -358,16 +365,28 @@
             padding: 10px 12px;
             font-size: 0.875rem;
             font-family: inherit;
-            transition: border-color 140ms ease-out;
+            transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
         }
 
-        .form-input:focus {
+        .form-input:focus-visible, .form-input:focus {
             outline: none;
             border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 174, 217, 0.15);
+        }
+
+        .form-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--bg-surface);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
         }
 
         .form-input-mono {
             font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
         }
 
         .preset-chips {
@@ -384,8 +403,10 @@
             padding: 4px 10px;
             font-size: 0.75rem;
             font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
             color: var(--text-secondary);
             cursor: pointer;
+            user-select: none;
             transition: all 140ms ease-out;
         }
 
@@ -393,6 +414,15 @@
             color: var(--text-primary);
             border-color: var(--border-hover);
             background: var(--bg-surface-hover);
+        }
+
+        .preset-chip:active {
+            transform: scale(0.96);
+        }
+
+        .preset-chip:focus-visible {
+            outline: 2px solid var(--border-focus);
+            outline-offset: 1px;
         }
 
         /* Live QR Preview Box */
