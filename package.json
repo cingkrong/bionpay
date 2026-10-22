@@ -1,7 +1,11 @@
 {
-  "name": "gopay-merchant-gateway",
+  "name": "bionpay",
   "version": "1.0.0",
-  "description": "GoPay Merchant Payment Gateway & QRIS Verification API (Stateless)",
+  "description": "BionPay - Self-Hosted GoPay Merchant Payment Gateway & Dynamic QRIS Engine",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cingkrong/bionpay.git"
+  },
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
