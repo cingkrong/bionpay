@@ -7,32 +7,41 @@ const crypto = require('crypto');
 require('dotenv').config();
 const QRCode = require('qrcode');
 const sessionManager = require('./sessionManager');
+const shopeeManager = require('./shopeeManager');
 
 // Helper pembaca dinamis konfigurasi .env agar selalu sinkron tanpa perlu restart server
-function getStaticQRIS() {
+function getStaticQRIS(provider = 'GOPAY') {
     try {
         const envPath = path.join(__dirname, '.env');
         if (fs.existsSync(envPath)) {
             const raw = fs.readFileSync(envPath, 'utf-8');
             const lines = raw.split(/\r?\n/);
+            const targetKey = provider.toUpperCase() === 'SHOPEEPAY' ? 'SHOPEE_QRIS_STATIC=' : 'QRIS_STATIC=';
             for (const line of lines) {
                 const trimmed = line.trim();
-                if (trimmed.startsWith('QRIS_STATIC=')) {
-                    const val = trimmed.substring('QRIS_STATIC='.length).trim();
+                if (trimmed.startsWith(targetKey)) {
+                    const val = trimmed.substring(targetKey.length).trim();
                     if (val && !val.startsWith('#')) return val;
                 }
             }
         }
     } catch (e) {}
+    if (provider.toUpperCase() === 'SHOPEEPAY') {
+        return process.env.SHOPEE_QRIS_STATIC || process.env.QRIS_STATIC || '';
+    }
     return process.env.QRIS_STATIC || '';
 }
 
 function getEnvConfig() {
-    let qrisStatic = getStaticQRIS();
+    let qrisStatic = getStaticQRIS('GOPAY');
+    let shopeeQrisStatic = getStaticQRIS('SHOPEEPAY');
     let merchantName = process.env.GOPAY_MERCHANT_NAME;
     let merchantCity = process.env.GOPAY_MERCHANT_CITY;
     let merchantId = process.env.GOPAY_MERCHANT_ID;
     let sandbox = process.env.SANDBOX_MODE === 'true';
+    let shopeeToken = shopeeManager.getShopeeToken();
+    let telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+    let telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
     try {
         const envPath = path.join(__dirname, '.env');
@@ -45,11 +54,14 @@ function getEnvConfig() {
                 if (trimmed.startsWith('GOPAY_MERCHANT_CITY=')) merchantCity = trimmed.substring('GOPAY_MERCHANT_CITY='.length).trim();
                 if (trimmed.startsWith('GOPAY_MERCHANT_ID=')) merchantId = trimmed.substring('GOPAY_MERCHANT_ID='.length).trim();
                 if (trimmed.startsWith('SANDBOX_MODE=')) sandbox = trimmed.substring('SANDBOX_MODE='.length).trim() === 'true';
+                if (trimmed.startsWith('SHOPEE_QRIS_STATIC=')) shopeeQrisStatic = trimmed.substring('SHOPEE_QRIS_STATIC='.length).trim();
+                if (trimmed.startsWith('TELEGRAM_BOT_TOKEN=')) telegramBotToken = trimmed.substring('TELEGRAM_BOT_TOKEN='.length).trim();
+                if (trimmed.startsWith('TELEGRAM_CHAT_ID=')) telegramChatId = trimmed.substring('TELEGRAM_CHAT_ID='.length).trim();
             }
         }
     } catch (e) {}
 
-    return { qrisStatic, merchantName, merchantCity, merchantId, sandbox };
+    return { qrisStatic, shopeeQrisStatic, merchantName, merchantCity, merchantId, sandbox, shopeeToken, telegramBotToken, telegramChatId };
 }
 
 const PORT = process.env.PORT || 3000;
@@ -239,14 +251,33 @@ async function autoMatchPendingQris() {
 
     try {
         for (const item of pendingList) {
-            const matched = await verifyPayment(item.q.amount, item.q.createdAt, null, null, item.q.trxId || item.id);
+            let matched = null;
+            const provider = (item.q.provider || 'AUTO').toUpperCase();
+
+            if (provider === 'SHOPEEPAY') {
+                matched = await shopeeManager.verifyShopeePayment(item.q.amount, item.q.createdAt, item.q.trxId || item.id);
+            } else if (provider === 'GOPAY') {
+                matched = await verifyPayment(item.q.amount, item.q.createdAt, null, null, item.q.trxId || item.id);
+            } else {
+                // AUTO: Coba GoPay dulu, jika belum ada cek ShopeePay
+                try {
+                    matched = await verifyPayment(item.q.amount, item.q.createdAt, null, null, item.q.trxId || item.id);
+                } catch (e) {}
+                if (!matched) {
+                    try {
+                        matched = await shopeeManager.verifyShopeePayment(item.q.amount, item.q.createdAt, item.q.trxId || item.id);
+                    } catch (e) {}
+                }
+            }
+
             if (matched) {
                 item.q.status = 'PAID';
                 item.q.amount = matched.amount || item.q.amount;
                 item.q.transaction = matched;
+                item.q.provider = matched.provider || item.q.provider || 'GOPAY';
                 qrisStore.set(item.id, item.q);
                 saveStore();
-                logActivity('SUCCESS', `Auto-Match: Pembayaran QRIS ID ${item.id} (TRX: ${item.q.trxId}) otomatis diverifikasi lunas Rp ${item.q.amount} via ${matched.payer_issuer}!`);
+                logActivity('SUCCESS', `Auto-Match [${item.q.provider}]: Pembayaran QRIS ID ${item.id} (TRX: ${item.q.trxId}) otomatis diverifikasi lunas Rp ${item.q.amount} via ${matched.payer_issuer}!`);
                 dispatchWebhook(item.q, matched);
             }
         }
@@ -506,44 +537,85 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Cek Status Sesi Token
-app.get('/token-status', apiKeyAuth, async (req, res) => {
-    const activeHeaders = await sessionManager.getValidHeaders(req.headers['user-agent']);
-    if (!activeHeaders) {
-        const isSandbox = process.env.SANDBOX_MODE === 'true';
+// Cek Status Sesi & Token (GoPay, ShopeePay, atau Keduanya)
+app.get(['/token-status', '/api/token-status'], apiKeyAuth, async (req, res) => {
+    const provider = (req.query.provider || '').toUpperCase();
+
+    // Jika ShopeePay diminta secara spesifik
+    if (provider === 'SHOPEEPAY') {
+        const isValid = await shopeeManager.checkShopeeToken();
+        const shopeeInfo = shopeeManager.getShopeeStatus();
         return res.json({
-            success: isSandbox,
+            status: isValid,
+            success: isValid,
             data: {
-                token_status: isSandbox ? 'sandbox_active' : 'invalid',
-                message: isSandbox
-                    ? 'Mode Sandbox Aktif (Testing Lokal Tanpa Sesi GoBiz Asli).'
-                    : 'Sesi belum dikonfigurasi. Jalankan `node login.js` di terminal.'
+                provider: 'SHOPEEPAY',
+                token_status: isValid ? 'valid' : (shopeeInfo.configured ? 'expired' : 'not_configured'),
+                valid: isValid,
+                merchant_name: shopeeInfo.merchant_name,
+                expiry: shopeeInfo.expiry,
+                message: isValid ? 'ShopeePay Token aktif dan berfungsi' : (shopeeInfo.configured ? 'ShopeePay Token kadaluarsa / tidak valid' : 'ShopeePay Token belum dikonfigurasi')
             }
         });
     }
-    try {
-        const merchantId = getMerchantId();
-        const now = new Date();
-        const oneHourAgo = new Date(now.getTime() - 3600 * 1000).toISOString();
 
-        await axios.get(GOJEK_TRANSACTIONS_URL, {
-            headers: activeHeaders,
-            params: {
-                from: 0,
-                size: 1,
-                statuses: 'SETTLEMENT,CAPTURE',
-                payment_types: 'QRIS,GOPAY',
-                start_time: oneHourAgo,
-                end_time: now.toISOString(),
-                merchant_ids: merchantId
-            },
-            timeout: 5000
+    // Jika GoPay diminta secara spesifik
+    if (provider === 'GOPAY') {
+        const activeHeaders = await sessionManager.getValidHeaders(req.headers['user-agent']);
+        const isSandbox = process.env.SANDBOX_MODE === 'true';
+        if (!activeHeaders) {
+            return res.json({
+                status: isSandbox,
+                success: isSandbox,
+                data: {
+                    provider: 'GOPAY',
+                    token_status: isSandbox ? 'sandbox_active' : 'invalid',
+                    message: isSandbox ? 'Mode Sandbox Aktif' : 'Sesi GoPay belum dikonfigurasi. Jalankan `node login.js`'
+                }
+            });
+        }
+        return res.json({
+            status: true,
+            success: true,
+            data: {
+                provider: 'GOPAY',
+                token_status: 'valid',
+                message: 'Token dan Sesi GoPay Merchant Aktif'
+            }
         });
-
-        res.json({ success: true, data: { token_status: 'valid', message: 'Token dan Sesi GoPay Merchant Aktif' } });
-    } catch (err) {
-        res.json({ success: false, data: { token_status: 'invalid', message: err.message } });
     }
+
+    // Default: Kembalikan status kedua provider
+    const activeHeaders = await sessionManager.getValidHeaders(req.headers['user-agent']);
+    const isSandbox = process.env.SANDBOX_MODE === 'true';
+    const isGopayValid = Boolean(activeHeaders) || isSandbox;
+    const isShopeeValid = await shopeeManager.checkShopeeToken();
+    const shopeeInfo = shopeeManager.getShopeeStatus();
+
+    res.json({
+        status: isGopayValid || isShopeeValid,
+        success: true,
+        data: {
+            gopay: {
+                configured: Boolean(activeHeaders) || isSandbox,
+                status: isGopayValid ? 'valid' : 'invalid',
+                message: isGopayValid ? (isSandbox ? 'Sandbox Aktif' : 'Sesi GoPay Aktif') : 'Perlu node login.js'
+            },
+            shopee: {
+                configured: Boolean(shopeeInfo.configured),
+                valid: isShopeeValid,
+                status: isShopeeValid ? 'valid' : (shopeeInfo.configured ? 'expired' : 'not_configured'),
+                merchant_name: shopeeInfo.merchant_name,
+                expiry: shopeeInfo.expiry,
+                message: isShopeeValid ? 'ShopeePay Token Aktif' : (shopeeInfo.configured ? 'Token Expired / Error' : 'Token Belum Diisi')
+            }
+        }
+    });
+});
+
+app.get('/api/gopay/token-status', apiKeyAuth, async (req, res) => {
+    req.query.provider = 'GOPAY';
+    return app._router.handle(req, res);
 });
 
 // Dashboard Telemetry & Stats API
@@ -581,7 +653,21 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const merchantInfo = extractMerchantInfo(cfg.qrisStatic);
 
     // Ambil mutasi real-time settlement dari GoBiz (default hari ini / 24 jam)
-    const mutations = await getLiveGoBizMutations(req.query.force === '1', req.query.days || req.query.range);
+    let mutations = await getLiveGoBizMutations(req.query.force === '1', req.query.days || req.query.range);
+    
+    // Tag provider GOPAY pada mutasi GoBiz
+    mutations = mutations.map(m => ({ ...m, provider: 'GOPAY' }));
+
+    // Jika ShopeePay dikonfigurasi, ambil juga mutasi ShopeePay
+    const hasShopee = !!shopeeManager.getShopeeToken();
+    if (hasShopee) {
+        try {
+            const shopeeMuts = await shopeeManager.getShopeeMutations(req.query.days || req.query.range || 1, 30);
+            mutations = mutations.concat(shopeeMuts);
+            // Sort by time descending
+            mutations.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+        } catch (e) {}
+    }
 
     res.json({
         success: true,
@@ -591,6 +677,9 @@ app.get('/api/dashboard/stats', async (req, res) => {
             total_volume: totalVolume,
             active_sessions: qrisStore.size,
             session_status: hasSession ? 'AUTHENTICATED' : 'NOT_CONFIGURED',
+            gopay_session_status: hasSession ? 'AUTHENTICATED' : 'NOT_CONFIGURED',
+            shopee_session_status: hasShopee ? (shopeeManager.isTokenValid() ? 'AUTHENTICATED' : 'INVALID') : 'NOT_CONFIGURED',
+            shopee_configured: hasShopee,
             uptime: Math.floor(process.uptime()),
             sandbox_mode: cfg.sandbox,
             port: PORT,
@@ -599,21 +688,31 @@ app.get('/api/dashboard/stats', async (req, res) => {
             merchant_id: cfg.merchantId || merchantInfo.merchant_id || null
         },
         recent_qris: allQris.slice(0, 50),
-        recent_mutations: mutations.slice(0, 30),
+        recent_mutations: mutations.slice(0, 50),
         recent_logs: activityLogs.slice(0, 50)
     });
 });
 
-// Endpoint Manual Trigger Sinkronisasi Mutasi GoBiz
+// Endpoint Manual Trigger Sinkronisasi Mutasi (GoBiz + ShopeePay)
 app.post('/api/sync-mutations', async (req, res) => {
     try {
         await autoMatchPendingQris();
-        const mutations = await getLiveGoBizMutations(true, req.query.days || req.body?.days || 1);
+        let mutations = await getLiveGoBizMutations(true, req.query.days || req.body?.days || 1);
+        mutations = mutations.map(m => ({ ...m, provider: 'GOPAY' }));
+
+        if (shopeeManager.getShopeeToken()) {
+            try {
+                const shopeeMuts = await shopeeManager.getShopeeMutations(req.query.days || req.body?.days || 1, 30);
+                mutations = mutations.concat(shopeeMuts);
+                mutations.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+            } catch (e) {}
+        }
+
         res.json({
             success: true,
-            message: 'Mutasi berhasil disinkronkan langsung dari GoBiz',
+            message: 'Mutasi berhasil disinkronkan langsung dari GoBiz & ShopeePay',
             mutations_count: mutations.length,
-            mutations: mutations.slice(0, 30)
+            mutations: mutations.slice(0, 50)
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -687,8 +786,8 @@ app.post('/api/claim-mutation', async (req, res) => {
     }
 });
 
-// Buat QRIS Dinamis (Support GET query & POST body)
-app.all('/create-qris', apiKeyAuth, (req, res) => {
+// Buat QRIS Dinamis (Support GET query & POST body - Provider: GOPAY, SHOPEEPAY, atau AUTO)
+function handleCreateDynamicQRIS(req, res) {
     let rawAmount = req.body?.amount || req.query?.amount;
     if (typeof rawAmount === 'string') {
         rawAmount = rawAmount.replace(/[^0-9]/g, '');
@@ -698,9 +797,27 @@ app.all('/create-qris', apiKeyAuth, (req, res) => {
         return res.status(400).json({ success: false, message: 'Nominal pembayaran tidak valid (gunakan ?amount=...)' });
     }
 
-    const staticTemplate = getStaticQRIS();
+    const reqProvider = (req.body?.provider || req.query?.provider || 'AUTO').toUpperCase();
+    let chosenProvider = 'GOPAY';
+    let staticTemplate = '';
+
+    if (reqProvider === 'SHOPEEPAY') {
+        chosenProvider = 'SHOPEEPAY';
+        staticTemplate = getStaticQRIS('SHOPEEPAY');
+    } else if (reqProvider === 'GOPAY') {
+        chosenProvider = 'GOPAY';
+        staticTemplate = getStaticQRIS('GOPAY');
+    } else {
+        // AUTO selection: prefer GOPAY if configured, otherwise SHOPEEPAY
+        staticTemplate = getStaticQRIS('GOPAY');
+        if (!staticTemplate) {
+            staticTemplate = getStaticQRIS('SHOPEEPAY');
+            if (staticTemplate) chosenProvider = 'SHOPEEPAY';
+        }
+    }
+
     if (!staticTemplate) {
-        return res.status(500).json({ success: false, message: 'QRIS_STATIC belum dikonfigurasi di .env' });
+        return res.status(500).json({ success: false, message: 'QRIS_STATIC atau SHOPEE_QRIS_STATIC belum dikonfigurasi di .env' });
     }
 
     const dynamicCode = generateDynamicQRIS(staticTemplate, amount);
@@ -725,6 +842,7 @@ app.all('/create-qris', apiKeyAuth, (req, res) => {
         callbackUrl,
         returnUrl,
         trxId,
+        provider: chosenProvider,
         expiresAt,
         createdAt,
         status: 'PENDING'
@@ -738,13 +856,14 @@ app.all('/create-qris', apiKeyAuth, (req, res) => {
     const publicUrl = `${protocol}://${host}/qr/${qrisId}`;
     const qrImageUrl = `${protocol}://${host}/qr/${qrisId}/image.png`;
 
-    logActivity('INFO', `QRIS Dinamis dibuat | TRX-ID: ${trxId} | Nominal: Rp ${parseInt(amount, 10)} | Order ID: ${orderId || '-'}`);
+    logActivity('INFO', `QRIS Dinamis dibuat [${chosenProvider}] | TRX-ID: ${trxId} | Nominal: Rp ${parseInt(amount, 10)} | Order ID: ${orderId || '-'}`);
 
     res.json({
         success: true,
         data: {
             qris_id: qrisId,
             trx_id: trxId,
+            provider: chosenProvider,
             order_id: orderId,
             qris_url: publicUrl,
             qr_image_url: qrImageUrl,
@@ -756,7 +875,10 @@ app.all('/create-qris', apiKeyAuth, (req, res) => {
             expires_in: '5 menit'
         }
     });
-});
+}
+
+app.all('/create-qris', apiKeyAuth, handleCreateDynamicQRIS);
+app.post('/api/qris/create', apiKeyAuth, handleCreateDynamicQRIS);
 
 // Endpoint Gambar QRIS (Lokal, HD, Support Scanner Mobile Semua Bank & E-Wallet)
 app.get('/qr/:id/image.png', async (req, res) => {
@@ -1175,22 +1297,47 @@ async function verifyPayment(amount, startTime, merchantIdOverride = null, userA
     return null;
 }
 
-// Cek Pembayaran Masuk (Support GET query & POST body)
+// Cek Pembayaran Masuk (Support GET query & POST body - Provider: GOPAY, SHOPEEPAY, atau AUTO)
 app.all('/check-payment', apiKeyAuth, async (req, res) => {
     const amount = req.body?.amount || req.query?.amount;
     const startTime = req.body?.startTime || req.query?.startTime || req.query?.start_time;
     const scopeId = req.body?.trx_id || req.query?.trx_id || null;
+    const provider = (req.body?.provider || req.query?.provider || 'AUTO').toUpperCase();
 
     if (!amount || isNaN(amount)) {
         return res.status(400).json({ success: false, message: 'Nominal pembayaran tidak valid' });
     }
 
     try {
-        const merchantId = req.headers['x-gopay-merchant-id'] || null;
-        const matchedTransaction = await verifyPayment(amount, startTime, merchantId, req.headers['user-agent'], scopeId);
+        let matchedTransaction = null;
+        let lastError = null;
+
+        if (provider === 'SHOPEEPAY') {
+            matchedTransaction = await shopeeManager.verifyShopeePayment(amount, startTime, scopeId);
+        } else if (provider === 'GOPAY') {
+            const merchantId = req.headers['x-gopay-merchant-id'] || null;
+            matchedTransaction = await verifyPayment(amount, startTime, merchantId, req.headers['user-agent'], scopeId);
+        } else {
+            // AUTO: Cek GoPay terlebih dahulu
+            try {
+                const merchantId = req.headers['x-gopay-merchant-id'] || null;
+                matchedTransaction = await verifyPayment(amount, startTime, merchantId, req.headers['user-agent'], scopeId);
+            } catch (err) {
+                lastError = err;
+            }
+
+            // Jika belum ditemukan di GoPay, cek di ShopeePay (jika token ada)
+            if (!matchedTransaction && shopeeManager.getShopeeToken()) {
+                try {
+                    matchedTransaction = await shopeeManager.verifyShopeePayment(amount, startTime, scopeId);
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+        }
 
         if (matchedTransaction) {
-            logActivity('SUCCESS', `Pembayaran terverifikasi lunas untuk nominal Rp ${parseInt(amount, 10)}`, matchedTransaction);
+            logActivity('SUCCESS', `Pembayaran [${matchedTransaction.provider || provider}] terverifikasi lunas untuk nominal Rp ${parseInt(amount, 10)}`, matchedTransaction);
             return res.json({
                 success: true,
                 paid: true,
@@ -1208,9 +1355,58 @@ app.all('/check-payment', apiKeyAuth, async (req, res) => {
         logActivity('ERROR', `Gagal periksa pembayaran: ${errorDetail}`);
         return res.status(500).json({
             success: false,
-            message: 'Gagal mengambil data transaksi dari API GoPay',
+            message: 'Gagal mengambil data transaksi dari API Merchant',
             error: errorDetail
         });
+    }
+});
+
+// ── ShopeePay Dedicated Compatibility Endpoints ──────────────────────────────
+app.post(['/update-token', '/api/shopee/update-token'], apiKeyAuth, (req, res) => {
+    const token = req.body?.token || req.query?.token;
+    if (!token) {
+        return res.status(400).json({ success: false, error: 'Provide token in body (token)' });
+    }
+    const success = shopeeManager.updateShopeeToken(token);
+    if (success) {
+        logActivity('INFO', 'ShopeePay Token berhasil diperbarui via API');
+        return res.json({ success: true, message: 'ShopeePay Token berhasil diperbarui' });
+    }
+    res.status(500).json({ success: false, error: 'Gagal menyimpan ShopeePay Token' });
+});
+
+app.get('/api/shopee/token-status', apiKeyAuth, async (req, res) => {
+    req.query.provider = 'SHOPEEPAY';
+    return app._router.handle(req, res);
+});
+
+app.get(['/shopee/transactions', '/api/shopee/transactions'], apiKeyAuth, async (req, res) => {
+    try {
+        const days = req.query.days || req.query.range || 1;
+        const pageSize = parseInt(req.query.pageSize || '30', 10);
+        const mutations = await shopeeManager.getShopeeMutations(days, pageSize);
+        res.json({
+            success: true,
+            provider: 'SHOPEEPAY',
+            total_count: mutations.length,
+            data: { transactions: mutations }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get(['/shopee/transactions/all', '/api/shopee/transactions/all'], apiKeyAuth, async (req, res) => {
+    try {
+        const mutations = await shopeeManager.getShopeeMutations(30, 100);
+        res.json({
+            success: true,
+            provider: 'SHOPEEPAY',
+            total_count: mutations.length,
+            data: { transactions: mutations }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -1221,7 +1417,9 @@ app.get('/api/logs', apiKeyAuth, (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-    logActivity('SYSTEM', `GoPay Partner Gateway berjalan pada port ${PORT}`);
+    shopeeManager.startTokenChecker();
+    logActivity('SYSTEM', `BionPay Unified Gateway berjalan pada port ${PORT}`);
     logActivity('SYSTEM', `Developer & Merchant Dashboard: http://localhost:${PORT}/`);
+    logActivity('SYSTEM', `Providers: GoPay (GoBiz) + ShopeePay Partner`);
     logActivity('SYSTEM', `Mode: ${process.env.SANDBOX_MODE === 'true' ? 'SANDBOX (Pengujian Lokal Aktif)' : 'PRODUCTION'}`);
 });

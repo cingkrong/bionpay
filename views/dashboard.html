@@ -649,17 +649,21 @@
                 </div>
                 <div>
                     <div class="brand-text-title">
-                        <span>GoPay Partner Gateway</span>
+                        <span>BionPay Unified Gateway</span>
                         <span class="brand-badge-env {{ENV_BADGE_CLASS}}" id="env-badge">{{ENV_TEXT}}</span>
                     </div>
-                    <div class="brand-desc">Self-Hosted QRIS Dynamic & Payment Automation Platform</div>
+                    <div class="brand-desc">Self-Hosted GoPay & ShopeePay Payment Automation Platform</div>
                 </div>
             </div>
 
             <div class="nav-actions">
-                <div class="status-pill">
-                    <span class="status-dot" id="gateway-status-dot"></span>
-                    <span id="gateway-status-text">Engine Online</span>
+                <div class="status-pill" title="Status Sesi GoPay GoBiz">
+                    <span class="status-dot" id="gopay-status-dot"></span>
+                    <span id="gopay-status-text">GoPay: Checking...</span>
+                </div>
+                <div class="status-pill" title="Status Token ShopeePay Partner">
+                    <span class="status-dot" id="shopee-status-dot"></span>
+                    <span id="shopee-status-text">ShopeePay: Checking...</span>
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="copyApiKey()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -746,6 +750,10 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span>Daftar QRIS & Mutasi</span>
             </button>
+            <button class="tab-btn" onclick="switchTab('shopee')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>ShopeePay Partner</span>
+            </button>
             <button class="tab-btn" onclick="switchTab('playground')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
                 <span>API Console Playground</span>
@@ -800,6 +808,15 @@
                             <input type="url" id="inp-return-url" class="form-input" placeholder="https://toko-anda.com/payment/success">
                         </div>
 
+                        <div class="form-group">
+                            <label class="form-label" for="inp-provider">Provider QRIS Template</label>
+                            <select id="inp-provider" class="form-input">
+                                <option value="AUTO" selected>Auto (Gunakan Template GoPay / ShopeePay yang Tersedia)</option>
+                                <option value="GOPAY">GoPay / GoBiz (Static Template GoPay)</option>
+                                <option value="SHOPEEPAY">ShopeePay Partner (Static Template ShopeePay)</option>
+                            </select>
+                        </div>
+
                         <button type="submit" class="btn btn-primary" id="btn-submit-qris" style="width: 100%;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 13 9 20 9"></polyline><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg>
                             <span>Generate QRIS Dinamis</span>
@@ -848,10 +865,10 @@
                     <div>
                         <div class="card-title">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                            <span>Mutasi Masuk GoBiz (Real-Time Settlement)</span>
+                            <span>Mutasi Masuk Settlement (GoBiz & ShopeePay)</span>
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                            Uang masuk asli dari bank & e-wallet yang berhasil diterima akun GoBiz toko Anda
+                            Uang masuk asli dari bank & e-wallet yang berhasil diterima akun GoBiz dan ShopeePay toko Anda
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center;">
@@ -876,9 +893,10 @@
                         <thead>
                             <tr>
                                 <th>Waktu Transaksi</th>
+                                <th>Provider</th>
                                 <th>Bank / Penerbit</th>
                                 <th>Nominal Masuk</th>
-                                <th>Order ID GoBiz</th>
+                                <th>Order ID</th>
                                 <th>Transaction ID</th>
                                 <th>Status</th>
                                 <th>Tautan Sesi</th>
@@ -886,7 +904,7 @@
                         </thead>
                         <tbody id="table-mutasi-body">
                             <tr>
-                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat riwayat mutasi dari GoBiz...</td>
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat riwayat mutasi...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -920,6 +938,7 @@
                         <thead>
                             <tr>
                                 <th>TRX-ID</th>
+                                <th>Provider</th>
                                 <th>Order ID</th>
                                 <th>Nominal</th>
                                 <th>Status</th>
@@ -930,10 +949,101 @@
                         </thead>
                         <tbody id="table-qris-body">
                             <tr>
-                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat data sesi...</td>
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat data sesi...</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: SHOPEEPAY PARTNER MANAGEMENT -->
+        <section id="tab-shopee" class="tab-content">
+            <div class="split-grid">
+                <!-- ShopeePay Token & Config Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <span>ShopeePay Partner Account & Token</span>
+                        </div>
+                        <span id="shopee-tab-badge" class="badge-status badge-pending">Memeriksa...</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Nama Merchant</div>
+                            <div id="shopee-tab-merchant" style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">-</div>
+                        </div>
+                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Status Token</div>
+                            <div id="shopee-tab-status" style="font-size: 0.875rem; font-weight: 600; color: var(--warning);">-</div>
+                        </div>
+                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Kadaluarsa Token</div>
+                            <div id="shopee-tab-expiry" style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary);">-</div>
+                        </div>
+                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Pemeriksaan Terakhir</div>
+                            <div id="shopee-tab-lastcheck" style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary);">-</div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="handleUpdateShopeeToken(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="inp-shopee-token">Token Otentikasi ShopeePay (B:...)</label>
+                            <textarea id="inp-shopee-token" class="form-input form-input-mono" rows="3" placeholder="Masukkan token ShopeePay partner (misal: B:v1:eyJ...)" required></textarea>
+                            <span style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 4px; display: block;">Token akan langsung diverifikasi ke endpoint ShopeePay Partner dan disimpan ke file .env.</span>
+                        </div>
+
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="btn btn-primary" id="btn-save-shopee-token" style="flex: 1;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Simpan & Terapkan Token</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btn-check-shopee-token" onclick="checkShopeeTokenNow()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <span>Tes Koneksi</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tutorial & Documentation Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <span>Panduan Pengambilan Token ShopeePay</span>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6;">
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--text-primary);">1. Login ke Shopee Merchant Web</strong><br>
+                            Kunjungi portal <a href="https://shopeepay.shopee.co.id/merchant/" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">shopeepay.shopee.co.id/merchant</a> pada browser komputer Anda dan login dengan akun toko ShopeePay Anda.
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--text-primary);">2. Buka DevTools (F12)</strong><br>
+                            Tekan tombol <kbd style="background: var(--bg-surface-elevated); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-subtle); font-family: var(--font-mono);">F12</kbd> atau klik kanan &gt; <em>Inspect</em>, lalu pilih tab <strong>Network</strong>.
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--text-primary);">3. Filter Request "get-transaction-list"</strong><br>
+                            Buka menu <strong>Transaksi</strong> di portal merchant. Di tab Network, cari request yang bernama <code style="color: var(--accent-primary);">get-transaction-list</code>.
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--text-primary);">4. Salin Token dari Payload / Request Body</strong><br>
+                            Klik request tersebut, buka sub-tab <strong>Payload</strong> atau <strong>Request</strong>, cari properti <code style="color: var(--accent-primary);">metadata.token</code> (berformat string panjang diawali dengan <code style="color: var(--accent-primary);">B:...</code>). Salin dan tempel ke form di sebelah kiri.
+                        </div>
+
+                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary);">
+                            <strong style="color: var(--text-primary);">💡 Notifikasi Telegram Otomatis:</strong><br>
+                            Jika token ShopeePay mendekati masa kadaluarsa atau terjadi error otentikasi, BionPay dapat mengirimkan alert instan ke Telegram Anda. Cukup isi <code style="color: var(--accent-primary);">TELEGRAM_BOT_TOKEN</code> dan <code style="color: var(--accent-primary);">TELEGRAM_CHAT_ID</code> di file <code style="color: var(--accent-primary);">.env</code>.
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1165,20 +1275,84 @@ console.log('Buka checkout:', data.qris_url);</pre>
                 elName.innerText = stats.merchant_name;
             }
 
-            const elCity = document.getElementById('kpi-merchant-city');
-            if (elCity && stats.merchant_city) {
-                elCity.innerText = 'Wilayah: ' + stats.merchant_city;
+            // GoPay status indicator
+            const gopayDot = document.getElementById('gopay-status-dot');
+            const gopayText = document.getElementById('gopay-status-text');
+            const sessionElem = document.getElementById('kpi-session-status');
+
+            if (stats.gopay) {
+                if (stats.gopay.authenticated) {
+                    if (gopayDot) gopayDot.className = 'status-dot';
+                    if (gopayText) gopayText.innerText = 'GoPay: Aktif (' + (stats.gopay.merchant_name || 'Online') + ')';
+                    if (sessionElem) {
+                        sessionElem.innerText = 'Token GoBiz Aktif';
+                        sessionElem.style.color = 'var(--success)';
+                    }
+                } else if (stats.sandbox_mode) {
+                    if (gopayDot) gopayDot.className = 'status-dot warning';
+                    if (gopayText) gopayText.innerText = 'GoPay: Sandbox Demo';
+                    if (sessionElem) {
+                        sessionElem.innerText = 'Sandbox Demo';
+                        sessionElem.style.color = 'var(--warning)';
+                    }
+                } else {
+                    if (gopayDot) gopayDot.className = 'status-dot danger';
+                    if (gopayText) gopayText.innerText = 'GoPay: Perlu Login';
+                    if (sessionElem) {
+                        sessionElem.innerText = 'Perlu node login.js';
+                        sessionElem.style.color = 'var(--danger)';
+                    }
+                }
             }
 
-            const sessionElem = document.getElementById('kpi-session-status');
-            if (sessionElem) {
-                if (stats.session_status === 'AUTHENTICATED') {
-                    sessionElem.innerText = 'Token GoBiz Aktif';
-                    sessionElem.style.color = 'var(--success)';
+            // ShopeePay status indicator
+            const shopeeDot = document.getElementById('shopee-status-dot');
+            const shopeeText = document.getElementById('shopee-status-text');
+            const shopeeTabBadge = document.getElementById('shopee-tab-badge');
+            const shopeeTabMerchant = document.getElementById('shopee-tab-merchant');
+            const shopeeTabStatus = document.getElementById('shopee-tab-status');
+            const shopeeTabExpiry = document.getElementById('shopee-tab-expiry');
+            const shopeeTabLastCheck = document.getElementById('shopee-tab-lastcheck');
+
+            if (stats.shopee) {
+                if (stats.shopee.valid) {
+                    if (shopeeDot) shopeeDot.className = 'status-dot';
+                    if (shopeeText) shopeeText.innerText = 'ShopeePay: Terhubung';
+                    if (shopeeTabBadge) {
+                        shopeeTabBadge.className = 'badge-status badge-paid';
+                        shopeeTabBadge.innerText = 'AKTIF TERHUBUNG';
+                    }
+                    if (shopeeTabStatus) {
+                        shopeeTabStatus.innerText = 'Valid (Siap Digunakan)';
+                        shopeeTabStatus.style.color = 'var(--success)';
+                    }
+                } else if (stats.shopee.configured) {
+                    if (shopeeDot) shopeeDot.className = 'status-dot danger';
+                    if (shopeeText) shopeeText.innerText = 'ShopeePay: Token Expired';
+                    if (shopeeTabBadge) {
+                        shopeeTabBadge.className = 'badge-status badge-expired';
+                        shopeeTabBadge.innerText = 'TOKEN KADALUARSA';
+                    }
+                    if (shopeeTabStatus) {
+                        shopeeTabStatus.innerText = 'Token Expired / Error';
+                        shopeeTabStatus.style.color = 'var(--danger)';
+                    }
                 } else {
-                    sessionElem.innerText = stats.sandbox_mode ? 'Sandbox Aktif' : 'Perlu node login.js';
-                    sessionElem.style.color = stats.sandbox_mode ? 'var(--warning)' : 'var(--danger)';
+                    if (shopeeDot) shopeeDot.className = 'status-dot warning';
+                    if (shopeeText) shopeeText.innerText = 'ShopeePay: Belum Dikonfigurasi';
+                    if (shopeeTabBadge) {
+                        shopeeTabBadge.className = 'badge-status badge-pending';
+                        shopeeTabBadge.innerText = 'BELUM DIKONFIGURASI';
+                    }
+                    if (shopeeTabStatus) {
+                        shopeeTabStatus.innerText = 'Token Belum Diisi';
+                        shopeeTabStatus.style.color = 'var(--warning)';
+                    }
                 }
+
+                if (shopeeTabMerchant) shopeeTabMerchant.innerText = stats.shopee.merchant_name || (stats.shopee.valid ? 'Shopee Partner Merchant' : '-');
+                if (shopeeTabExpiry) shopeeTabExpiry.innerText = stats.shopee.expiry || '-';
+                if (shopeeTabLastCheck) shopeeTabLastCheck.innerText = stats.shopee.last_checked ? new Date(stats.shopee.last_checked).toLocaleTimeString('id-ID') : '-';
             }
         }
 
@@ -1186,14 +1360,20 @@ console.log('Buka checkout:', data.qris_url);</pre>
             const tbody = document.getElementById('table-mutasi-body');
             if (!tbody) return;
             if (!mutations || mutations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada mutasi pembayaran yang tercatat di GoBiz (30 hari terakhir).</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada mutasi pembayaran yang tercatat (30 hari terakhir).</td></tr>';
                 return;
             }
 
             tbody.innerHTML = mutations.map(m => {
                 const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(m.amount);
                 const timeStr = m.time ? new Date(m.time).toLocaleString('id-ID') : '-';
-                const issuerBadge = m.issuer ? `<span class="badge-status badge-paid" style="background: rgba(0, 174, 217, 0.15); border-color: rgba(0, 174, 217, 0.3); color: var(--accent-primary); font-weight: 700;">${m.issuer}</span>` : '-';
+                
+                const isShopee = m.provider === 'SHOPEEPAY' || (m.issuer && m.issuer.includes('Shopee'));
+                const providerBadge = isShopee 
+                    ? `<span class="badge-status" style="background: rgba(238, 77, 45, 0.15); color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); font-weight: 700;">ShopeePay</span>`
+                    : `<span class="badge-status" style="background: rgba(0, 174, 217, 0.15); color: var(--accent-primary); border: 1px solid rgba(0, 174, 217, 0.3); font-weight: 700;">GoPay</span>`;
+
+                const issuerBadge = m.issuer ? `<span class="badge-status badge-paid" style="background: rgba(255, 255, 255, 0.05); border-color: var(--border-subtle); color: var(--text-primary); font-weight: 600;">${m.issuer}</span>` : '-';
                 
                 let claimStatusHtml = '';
                 if (m.claimed_by) {
@@ -1205,6 +1385,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
                 return `
                     <tr>
                         <td style="color: var(--text-secondary); font-size: 0.8125rem;">${timeStr}</td>
+                        <td>${providerBadge}</td>
                         <td>${issuerBadge}</td>
                         <td style="font-family: var(--font-mono); font-weight: 700; color: var(--success); font-size: 0.9375rem;">${formattedAmount}</td>
                         <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">${m.order_id || '-'}</td>
@@ -1245,13 +1426,13 @@ console.log('Buka checkout:', data.qris_url);</pre>
         async function syncMutationsNow() {
             const btn = document.getElementById('btn-sync-mutasi');
             if (btn) btn.disabled = true;
-            showToast("Menghubungi GoBiz API untuk sinkronisasi mutasi...");
+            showToast("Menghubungi GoBiz & ShopeePay API untuk sinkronisasi mutasi...");
 
             try {
                 const res = await fetch('/api/sync-mutations', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`Sinkronisasi berhasil! ${data.mutations_count || 0} mutasi GoBiz terverifikasi.`);
+                    showToast(`Sinkronisasi berhasil! ${data.mutations_count || 0} mutasi terverifikasi.`);
                     await refreshDashboardData();
                 } else {
                     showToast("Gagal sinkronisasi: " + (data.error || "Error tidak diketahui"));
@@ -1264,7 +1445,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
         }
 
         async function verifySingleQris(qrisId) {
-            showToast("Memeriksa status pembayaran di GoBiz...");
+            showToast("Memeriksa status pembayaran mutasi settlement...");
             try {
                 const res = await fetch('/api/qr-status/' + qrisId);
                 const data = await res.json();
@@ -1282,7 +1463,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
         function renderTable(items) {
             const tbody = document.getElementById('table-qris-body');
             if (!items || items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada sesi QRIS yang tercatat.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada sesi QRIS yang tercatat.</td></tr>';
                 return;
             }
 
@@ -1292,9 +1473,21 @@ console.log('Buka checkout:', data.qris_url);</pre>
                 const createdTime = q.createdAt ? new Date(q.createdAt).toLocaleTimeString('id-ID') : '-';
                 const issuerInfo = q.transaction?.payer_issuer ? `<span class="badge-status badge-paid" style="font-size: 0.75rem;">${q.transaction.payer_issuer}</span>` : `<span style="color: var(--text-muted); font-size: 0.75rem;">-</span>`;
 
+                const isShopee = q.provider === 'SHOPEEPAY';
+                const isGopay = q.provider === 'GOPAY';
+                let providerBadge = '';
+                if (isShopee) {
+                    providerBadge = `<span class="badge-status" style="background: rgba(238, 77, 45, 0.15); color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); font-weight: 700;">ShopeePay</span>`;
+                } else if (isGopay) {
+                    providerBadge = `<span class="badge-status" style="background: rgba(0, 174, 217, 0.15); color: var(--accent-primary); border: 1px solid rgba(0, 174, 217, 0.3); font-weight: 700;">GoPay</span>`;
+                } else {
+                    providerBadge = `<span class="badge-status badge-pending" style="font-size: 0.6875rem;">AUTO</span>`;
+                }
+
                 return `
                     <tr>
                         <td style="font-family: var(--font-mono); font-weight: 600;">${q.trxId}</td>
+                        <td>${providerBadge}</td>
                         <td style="color: var(--text-secondary);">${q.orderId || '-'}</td>
                         <td style="font-family: var(--font-mono); font-weight: 600;">${formattedAmount}</td>
                         <td><span class="badge-status ${badgeClass}">${q.status}</span></td>
@@ -1304,7 +1497,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
                             <div style="display: flex; gap: 6px;">
                                 <a href="/qr/${q.qrisId}" target="_blank" class="btn btn-secondary btn-sm">Lihat QR</a>
                                 ${q.status === 'PENDING' ? `
-                                    <button class="btn btn-secondary btn-sm" onclick="verifySingleQris('${q.qrisId}')" title="Cek apakah pembayaran sudah masuk di GoBiz">Cek Mutasi</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="verifySingleQris('${q.qrisId}')" title="Cek apakah pembayaran sudah masuk">Cek Mutasi</button>
                                     <button class="btn btn-primary btn-sm" onclick="simulatePaymentFor('${q.qrisId}')">Simulasi</button>
                                 ` : ''}
                             </div>
@@ -1366,6 +1559,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
             const order_id = document.getElementById('inp-order-id').value;
             const callback_url = document.getElementById('inp-callback-url').value;
             const return_url = document.getElementById('inp-return-url').value;
+            const provider = document.getElementById('inp-provider')?.value || 'AUTO';
 
             try {
                 const res = await fetch('/create-qris', {
@@ -1374,7 +1568,7 @@ console.log('Buka checkout:', data.qris_url);</pre>
                         'Content-Type': 'application/json',
                         'x-api-key': API_KEY
                     },
-                    body: JSON.stringify({ amount, order_id, callback_url, return_url })
+                    body: JSON.stringify({ amount, order_id, callback_url, return_url, provider })
                 });
 
                 const data = await res.json();
@@ -1390,6 +1584,60 @@ console.log('Buka checkout:', data.qris_url);</pre>
                 showToast("Error: " + err.message);
             } finally {
                 btn.disabled = false;
+            }
+        }
+
+        async function handleUpdateShopeeToken(e) {
+            e.preventDefault();
+            const token = document.getElementById('inp-shopee-token').value.trim();
+            if (!token) {
+                showToast("Token ShopeePay tidak boleh kosong");
+                return;
+            }
+            const btn = document.getElementById('btn-save-shopee-token');
+            btn.disabled = true;
+            showToast("Memverifikasi dan menyimpan token ShopeePay...");
+            try {
+                const res = await fetch('/update-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.status || data.success) {
+                    showToast("Token ShopeePay berhasil diverifikasi & disimpan!");
+                    document.getElementById('inp-shopee-token').value = '';
+                    refreshDashboardData();
+                } else {
+                    showToast("Gagal verifikasi token: " + (data.message || data.msg || "Token tidak valid"));
+                }
+            } catch (err) {
+                showToast("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function checkShopeeTokenNow() {
+            const btn = document.getElementById('btn-check-shopee-token');
+            if (btn) btn.disabled = true;
+            showToast("Memeriksa status token ShopeePay partner...");
+            try {
+                const res = await fetch('/token-status?provider=SHOPEEPAY&api_key=' + encodeURIComponent(API_KEY));
+                const data = await res.json();
+                if (data.status && data.data?.valid) {
+                    showToast(`Token ShopeePay Aktif! Valid sampai: ${data.data?.expiry || 'Aktif'}`);
+                } else {
+                    showToast(`Status Token: ${data.data?.message || data.message || 'Token tidak valid'}`);
+                }
+                refreshDashboardData();
+            } catch (err) {
+                showToast("Error periksa token: " + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
             }
         }
 
