@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoPay Merchant Partner Gateway - Developer & Merchant Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #09090b;
+            --bg-surface: #121215;
+            --bg-surface-elevated: #18181c;
+            --bg-surface-hover: #1e1e24;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --border-focus: #00aed9;
+            --accent-primary: #00aed9;
+            --accent-hover: #0098bd;
+            --accent-subtle: rgba(0, 174, 217, 0.12);
+            --accent-foreground: #ffffff;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --success: #10b981;
+            --success-subtle: rgba(16, 185, 129, 0.12);
+            --warning: #f59e0b;
+            --warning-subtle: rgba(245, 158, 11, 0.12);
+            --danger: #ef4444;
+            --danger-subtle: rgba(239, 68, 68, 0.12);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Header */
+        .top-navbar {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+
+        .navbar-inner {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--accent-subtle);
+            border: 1px solid rgba(0, 174, 217, 0.3);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+        }
+
+        .brand-text-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-badge-env {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-sandbox {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .brand-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface-elevated);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .status-dot.danger {
+            background: var(--danger);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        .status-dot.warning {
+            background: var(--warning);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 14px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 1px solid transparent;
+            user-select: none;
+            transition: background-color 140ms ease-out, transform 60ms ease-out, border-color 140ms ease-out;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid var(--border-focus);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: var(--accent-foreground);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-surface-elevated);
+            color: var(--text-primary);
+            border-color: var(--border-subtle);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--border-hover);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Main Container */
+        .main-layout {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* KPI Banner */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .kpi-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-meta {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+        }
+
+        /* Tab Navigation */
+        .tabs-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 140ms ease-out, border-color 140ms ease-out;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Grid Section (Overview) */
+        .split-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 22px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .card-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color 140ms ease-out;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+
+        .form-input-mono {
+            font-family: var(--font-mono);
+        }
+
+        .preset-chips {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-chip {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 140ms ease-out;
+        }
+
+        .preset-chip:hover {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            background: var(--bg-surface-hover);
+        }
+
+        /* Live QR Preview Box */
+        .qr-preview-box {
+            background: var(--bg-surface-elevated);
+            border: 1px dashed var(--border-hover);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+        }
+
+        .qr-white-frame {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            margin-bottom: 16px;
+        }
+
+        .qr-white-frame img {
+            width: 180px;
+            height: 180px;
+            display: block;
+        }
+
+        /* Tables */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: var(--bg-surface);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-surface-elevated);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background: var(--warning-subtle);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-paid {
+            background: var(--success-subtle);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-expired {
+            background: var(--danger-subtle);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Console / API Playground */
+        .console-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .code-block {
+            background: #000000;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: #d1d5db;
+            overflow-x: auto;
+            max-height: 400px;
+            line-height: 1.6;
+        }
+
+        /* Logs Console */
+        .logs-stream {
+            background: #000000;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            max-height: 520px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 12px;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .log-level {
+            font-weight: 600;
+            width: 70px;
+            white-space: nowrap;
+        }
+
+        .log-level.INFO { color: var(--accent-primary); }
+        .log-level.SUCCESS { color: var(--success); }
+        .log-level.WARNING { color: var(--warning); }
+        .log-level.ERROR { color: var(--danger); }
+        .log-level.SYSTEM { color: #a855f7; }
+
+        .log-msg {
+            color: #e4e4e7;
+            word-break: break-all;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-hover);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 160ms cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .split-grid, .console-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            .navbar-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <header class="top-navbar">
+        <div class="navbar-inner">
+            <div class="brand-block">
+                <div class="brand-logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-text-title">
+                        <span>GoPay Partner Gateway</span>
+                        <span class="brand-badge-env {{ENV_BADGE_CLASS}}" id="env-badge">{{ENV_TEXT}}</span>
+                    </div>
+                    <div class="brand-desc">Self-Hosted QRIS Dynamic & Payment Automation Platform</div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <div class="status-pill">
+                    <span class="status-dot" id="gateway-status-dot"></span>
+                    <span id="gateway-status-text">Engine Online</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="copyApiKey()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Salin API Key</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="refreshDashboardData()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <!-- KPI Metrics Grid -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">
+                    <span>Total QRIS Dibuat</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="kpi-total-created">0</div>
+                <div class="kpi-meta">Sesi QRIS sejak server running</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">
+                    <span>Transaksi Lunas</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="kpi-total-paid" style="color: var(--success);">0</div>
+                <div class="kpi-meta" id="kpi-paid-rate">0% conversion rate</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">
+                    <span>Volume Pembayaran</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="kpi-total-volume">Rp 0</div>
+                <div class="kpi-meta">Akumulasi transaksi sukses</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">
+                    <span>GoPay Merchant Toko</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="kpi-merchant-name" style="font-size: 1.125rem; text-transform: uppercase;">{{MERCHANT_NAME}}</div>
+                <div class="kpi-meta">
+                    <span id="kpi-merchant-id" style="font-family: var(--font-mono); font-weight: 600;">MID: {{MERCHANT_ID}}</span> • 
+                    <span id="kpi-session-status" style="font-weight: 600;">Checking...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs-bar">
+            <button class="tab-btn active" onclick="switchTab('overview')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                <span>Ringkasan & Generator</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('explorer')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Daftar QRIS & Mutasi</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('playground')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                <span>API Console Playground</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('logs')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Live Activity Logs</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('docs')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Dokumentasi & Integrasi</span>
+            </button>
+        </nav>
+
+        <!-- TAB 1: OVERVIEW & GENERATOR -->
+        <section id="tab-overview" class="tab-content active">
+            <div class="split-grid">
+                <!-- Generator Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                            <span>Buat QRIS Dinamis Baru</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">EMVCo CRC16 Engine</span>
+                    </div>
+
+                    <form id="form-create-qris" onsubmit="handleCreateQris(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="inp-amount">Nominal Pembayaran (Rp)</label>
+                            <input type="text" inputmode="numeric" id="inp-amount" class="form-input form-input-mono" placeholder="Contoh: 25000 atau 25.000" required value="25000">
+                            <div class="preset-chips">
+                                <span class="preset-chip" onclick="setPresetAmount(10000)">Rp 10.000</span>
+                                <span class="preset-chip" onclick="setPresetAmount(25000)">Rp 25.000</span>
+                                <span class="preset-chip" onclick="setPresetAmount(50000)">Rp 50.000</span>
+                                <span class="preset-chip" onclick="setPresetAmount(100000)">Rp 100.000</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="inp-order-id">Order ID / Catatan (Opsional)</label>
+                            <input type="text" id="inp-order-id" class="form-input" placeholder="INV-2026-001">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="inp-callback-url">Webhook Callback URL (Opsional)</label>
+                            <input type="url" id="inp-callback-url" class="form-input" placeholder="https://toko-anda.com/webhook/gopay">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="inp-return-url">Return URL Pengalihan (Opsional)</label>
+                            <input type="url" id="inp-return-url" class="form-input" placeholder="https://toko-anda.com/payment/success">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-submit-qris" style="width: 100%;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 13 9 20 9"></polyline><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg>
+                            <span>Generate QRIS Dinamis</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Live Preview Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <span>Pratinjau QRIS Aktif</span>
+                        </div>
+                        <span id="preview-status-badge" class="badge-status badge-pending" style="display: none;">PENDING</span>
+                    </div>
+
+                    <div class="qr-preview-box" id="qr-preview-box">
+                        <div id="qr-placeholder">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom: 12px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                            <p style="font-size: 0.8125rem; color: var(--text-muted);">Belum ada QRIS aktif yang dibuat.<br>Gunakan form di samping untuk membuat QRIS instan.</p>
+                        </div>
+
+                        <div id="qr-active-preview" style="display: none; width: 100%;">
+                            <div class="qr-white-frame">
+                                <img id="preview-qr-img" src="" alt="QR Preview">
+                            </div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 4px;" id="preview-amount">Rp 0</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 16px;" id="preview-trx-id">TRX-XXXXXX</div>
+                            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                                <a id="preview-open-link" href="#" target="_blank" class="btn btn-secondary btn-sm">Buka Halaman Checkout</a>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="copyPreviewString()">Salin String EMVCo</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-preview-simulate" onclick="simulateActiveQrisPayment()">Simulasikan Bayar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: EXPLORER DAFTAR QRIS & MUTASI -->
+        <section id="tab-explorer" class="tab-content">
+            <!-- TABEL 1: MUTASI SETTLEMENT GOBIZ REAL-TIME -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>Mutasi Masuk GoBiz (Real-Time Settlement)</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Uang masuk asli dari bank & e-wallet yang berhasil diterima akun GoBiz toko Anda
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="select-mutasi-days" class="form-input" style="padding: 5px 10px; font-size: 0.75rem; width: auto; background: var(--bg-surface-elevated);" onchange="refreshDashboardData()">
+                            <option value="1" selected>Hari Ini (24 Jam)</option>
+                            <option value="7">7 Hari Terakhir</option>
+                            <option value="30">30 Hari Terakhir</option>
+                        </select>
+                        <span id="sync-mutasi-indicator" style="font-size: 0.6875rem; color: var(--success); display: inline-flex; align-items: center; gap: 4px;">
+                            <span style="width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block;"></span>
+                            Live Sync
+                        </span>
+                        <button class="btn btn-primary btn-sm" id="btn-sync-mutasi" onclick="syncMutationsNow()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                            <span>Sinkronkan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu Transaksi</th>
+                                <th>Bank / Penerbit</th>
+                                <th>Nominal Masuk</th>
+                                <th>Order ID GoBiz</th>
+                                <th>Transaction ID</th>
+                                <th>Status</th>
+                                <th>Tautan Sesi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-mutasi-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat riwayat mutasi dari GoBiz...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABEL 2: RIWAYAT SESI QRIS GATEWAY -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                            <span>Riwayat Sesi QRIS Gateway Engine</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Daftar tagihan QRIS yang di-generate beserta status pelunasan otomatis
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="inp-search-table" class="form-input form-input-mono" placeholder="Cari TRX / Order ID..." style="width: 200px; padding: 6px 10px; font-size: 0.75rem;" oninput="filterTable()">
+                        <button class="btn btn-secondary btn-sm" onclick="clearGatewayHistory()" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.25);" title="Kosongkan seluruh riwayat sesi gateway menjadi 0">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            <span>Kosongkan Sesi</span>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshDashboardData()">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TRX-ID</th>
+                                <th>Order ID</th>
+                                <th>Nominal</th>
+                                <th>Status</th>
+                                <th>Penerbit / Sumber</th>
+                                <th>Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-qris-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat data sesi...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: API PLAYGROUND CONSOLE -->
+        <section id="tab-playground" class="tab-content">
+            <div class="console-layout">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            <span>API Request Inspector</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Endpoint</label>
+                        <select id="api-select-endpoint" class="form-input" onchange="handleEndpointChange()">
+                            <option value="create_qris">POST /create-qris (Buat QRIS Dinamis)</option>
+                            <option value="check_payment">GET /check-payment (Cek Pembayaran Masuk)</option>
+                            <option value="token_status">GET /token-status (Cek Sesi GoPay)</option>
+                            <option value="transactions">GET /transactions (Riwayat Mutasi)</option>
+                            <option value="health">GET /api/health (Health Check)</option>
+                            <option value="logs">GET /api/logs (Activity Logs)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Request Body / Query (JSON)</label>
+                        <textarea id="api-request-payload" class="form-input form-input-mono" rows="6">{\n  "amount": 25000,\n  "order_id": "TEST-01"\n}</textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="sendApiPlaygroundRequest()" style="width: 100%;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Kirim Permintaan API</span>
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>Hasil Response</span>
+                        </div>
+                        <div style="font-size: 0.75rem; font-family: var(--font-mono);" id="api-response-meta">-</div>
+                    </div>
+                    <pre class="code-block" id="api-response-display">// Response JSON akan muncul di sini</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: LIVE ACTIVITY LOGS -->
+        <section id="tab-logs" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        <span>Live Gateway Terminal Logs</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="log-filter-level" class="form-input" style="padding: 4px 8px; font-size: 0.75rem; width: 110px;" onchange="renderLogs()">
+                            <option value="ALL">Semua Level</option>
+                            <option value="INFO">INFO</option>
+                            <option value="SUCCESS">SUCCESS</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="ERROR">ERROR</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" onclick="clearLogsView()">Bersihkan</button>
+                    </div>
+                </div>
+
+                <div class="logs-stream" id="logs-stream-container">
+                    <!-- Logs stream -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: DOKUMENTASI & SDK -->
+        <section id="tab-docs" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        <span>Panduan Integrasi Cepat (Quick Integration)</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.875rem; color: var(--text-primary); margin-bottom: 8px;">1. Membuat Transaksi QRIS Dinamis</h3>
+                    <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 12px;">Panggil endpoint <code style="color: var(--accent-primary);">POST /create-qris</code> dengan menyertakan header <code style="color: var(--accent-primary);">x-api-key</code> dan payload nominal pembayaran.</p>
+                    <pre class="code-block">curl -X POST "{{ORIGIN}}/create-qris" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: {{API_KEY}}" \
+  -d '{"amount": 50000, "order_id": "ORDER-991", "callback_url": "https://toko.com/webhook"}'</pre>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 0.875rem; color: var(--text-primary); margin-bottom: 8px;">2. Contoh Kode Node.js (Fetch)</h3>
+                    <pre class="code-block">const response = await fetch('{{ORIGIN}}/create-qris', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': '{{API_KEY}}'
+  },
+  body: JSON.stringify({
+    amount: 50000,
+    order_id: 'INV-1029'
+  })
+});
+const { data } = await response.json();
+console.log('Buka checkout:', data.qris_url);</pre>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 0.875rem; color: var(--text-primary); margin-bottom: 8px;">3. Webhook Notifikasi Otomatis</h3>
+                    <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 12px;">Ketika pelanggan berhasil membayar, gateway akan secara otomatis mengirimkan HTTP POST ke URL callback toko Anda dengan payload:</p>
+                    <pre class="code-block">{
+  "event": "payment.success",
+  "qris_id": "abc12345",
+  "trx_id": "TRX-ABC12345",
+  "order_id": "INV-1029",
+  "amount": 50000,
+  "payer_issuer": "GoPay / BCA",
+  "status": "PAID",
+  "timestamp": 1729080000000
+}</pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast-notif">Notifikasi</div>
+
+    <script>
+        const API_KEY = "{{API_KEY}}";
+        let activeQrisList = [];
+        let liveMutationsList = [];
+        let rawLogs = [];
+        let currentActiveQris = null;
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notif');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        function copyApiKey() {
+            navigator.clipboard.writeText(API_KEY).then(() => {
+                showToast("API Key berhasil disalin ke clipboard!");
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.currentTarget.classList.add('active');
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.add('active');
+        }
+
+        function setPresetAmount(val) {
+            document.getElementById('inp-amount').value = val;
+        }
+
+        async function refreshDashboardData() {
+            try {
+                const days = document.getElementById('select-mutasi-days')?.value || '1';
+                const res = await fetch('/api/dashboard/stats?api_key=' + encodeURIComponent(API_KEY) + '&days=' + days);
+                const data = await res.json();
+                if (data.success) {
+                    renderStats(data.stats);
+                    activeQrisList = data.recent_qris || [];
+                    renderTable(activeQrisList);
+                    liveMutationsList = data.recent_mutations || [];
+                    renderMutationsTable(liveMutationsList);
+                    rawLogs = data.recent_logs || [];
+                    renderLogs();
+                }
+            } catch (err) {
+                console.error("Gagal refresh data:", err);
+            }
+        }
+
+        async function clearGatewayHistory() {
+            if (!confirm("Apakah Anda yakin ingin mengosongkan seluruh riwayat sesi QRIS gateway menjadi 0?")) {
+                return;
+            }
+            try {
+                showToast("Mengosongkan riwayat sesi gateway...");
+                const res = await fetch('/api/clear-history', {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Seluruh riwayat sesi gateway berhasil dikosongkan.");
+                    await refreshDashboardData();
+                } else {
+                    showToast("Gagal: " + (data.message || "Error"));
+                }
+            } catch (e) {
+                showToast("Error: " + e.message);
+            }
+        }
+
+        function renderStats(stats) {
+            if (!stats) return;
+            const elCreated = document.getElementById('kpi-total-created');
+            if (elCreated) elCreated.innerText = stats.total_created || 0;
+
+            const elPaid = document.getElementById('kpi-total-paid');
+            if (elPaid) elPaid.innerText = stats.total_paid || 0;
+
+            const elRate = document.getElementById('kpi-paid-rate');
+            if (elRate) {
+                const rate = stats.total_created > 0 ? Math.round((stats.total_paid / stats.total_created) * 100) : 0;
+                elRate.innerText = rate + '% conversion rate';
+            }
+
+            const elVolume = document.getElementById('kpi-total-volume');
+            if (elVolume) {
+                const formattedVolume = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.total_volume || 0);
+                elVolume.innerText = formattedVolume;
+            }
+
+            const elName = document.getElementById('kpi-merchant-name');
+            if (elName && stats.merchant_name) {
+                elName.innerText = stats.merchant_name;
+            }
+
+            const elCity = document.getElementById('kpi-merchant-city');
+            if (elCity && stats.merchant_city) {
+                elCity.innerText = 'Wilayah: ' + stats.merchant_city;
+            }
+
+            const sessionElem = document.getElementById('kpi-session-status');
+            if (sessionElem) {
+                if (stats.session_status === 'AUTHENTICATED') {
+                    sessionElem.innerText = 'Token GoBiz Aktif';
+                    sessionElem.style.color = 'var(--success)';
+                } else {
+                    sessionElem.innerText = stats.sandbox_mode ? 'Sandbox Aktif' : 'Perlu node login.js';
+                    sessionElem.style.color = stats.sandbox_mode ? 'var(--warning)' : 'var(--danger)';
+                }
+            }
+        }
+
+        function renderMutationsTable(mutations) {
+            const tbody = document.getElementById('table-mutasi-body');
+            if (!tbody) return;
+            if (!mutations || mutations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada mutasi pembayaran yang tercatat di GoBiz (30 hari terakhir).</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = mutations.map(m => {
+                const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(m.amount);
+                const timeStr = m.time ? new Date(m.time).toLocaleString('id-ID') : '-';
+                const issuerBadge = m.issuer ? `<span class="badge-status badge-paid" style="background: rgba(0, 174, 217, 0.15); border-color: rgba(0, 174, 217, 0.3); color: var(--accent-primary); font-weight: 700;">${m.issuer}</span>` : '-';
+                
+                let claimStatusHtml = '';
+                if (m.claimed_by) {
+                    claimStatusHtml = `<span class="badge-status badge-paid" style="font-size: 0.6875rem;">Lunas (${m.claimed_by})</span>`;
+                } else {
+                    claimStatusHtml = `<button class="btn btn-secondary btn-sm" onclick="claimMutationToLatestPending('${m.id}')" style="font-size: 0.6875rem; padding: 3px 8px;">Tautkan ke Sesi</button>`;
+                }
+
+                return `
+                    <tr>
+                        <td style="color: var(--text-secondary); font-size: 0.8125rem;">${timeStr}</td>
+                        <td>${issuerBadge}</td>
+                        <td style="font-family: var(--font-mono); font-weight: 700; color: var(--success); font-size: 0.9375rem;">${formattedAmount}</td>
+                        <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">${m.order_id || '-'}</td>
+                        <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">${m.id || '-'}</td>
+                        <td><span class="badge-status badge-paid">${m.status || 'SETTLEMENT'}</span></td>
+                        <td>${claimStatusHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function claimMutationToLatestPending(txId) {
+            const pending = activeQrisList.find(q => q.status === 'PENDING');
+            if (!pending) {
+                showToast("Tidak ada sesi QRIS berstatus PENDING saat ini.");
+                return;
+            }
+
+            try {
+                showToast(`Menautkan mutasi ke sesi ${pending.trxId}...`);
+                const res = await fetch('/api/claim-mutation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qris_id: pending.qrisId, transaction_id: txId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Sukses! Sesi ${pending.trxId} ditandai Lunas.`);
+                    refreshDashboardData();
+                } else {
+                    showToast(data.message || "Gagal menautkan mutasi");
+                }
+            } catch (err) {
+                showToast("Error: " + err.message);
+            }
+        }
+
+        async function syncMutationsNow() {
+            const btn = document.getElementById('btn-sync-mutasi');
+            if (btn) btn.disabled = true;
+            showToast("Menghubungi GoBiz API untuk sinkronisasi mutasi...");
+
+            try {
+                const res = await fetch('/api/sync-mutations', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Sinkronisasi berhasil! ${data.mutations_count || 0} mutasi GoBiz terverifikasi.`);
+                    await refreshDashboardData();
+                } else {
+                    showToast("Gagal sinkronisasi: " + (data.error || "Error tidak diketahui"));
+                }
+            } catch (err) {
+                showToast("Error sinkronisasi: " + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function verifySingleQris(qrisId) {
+            showToast("Memeriksa status pembayaran di GoBiz...");
+            try {
+                const res = await fetch('/api/qr-status/' + qrisId);
+                const data = await res.json();
+                if (data.success && data.paid) {
+                    showToast("Pembayaran Lunas! Diverifikasi via " + (data.transaction?.payer_issuer || "Bank"));
+                    refreshDashboardData();
+                } else {
+                    showToast("Belum terdeteksi pembayaran masuk.");
+                }
+            } catch (e) {
+                showToast("Error periksa status: " + e.message);
+            }
+        }
+
+        function renderTable(items) {
+            const tbody = document.getElementById('table-qris-body');
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Belum ada sesi QRIS yang tercatat.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = items.map(q => {
+                const badgeClass = q.status === 'PAID' ? 'badge-paid' : (q.status === 'EXPIRED' ? 'badge-expired' : 'badge-pending');
+                const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(q.amount);
+                const createdTime = q.createdAt ? new Date(q.createdAt).toLocaleTimeString('id-ID') : '-';
+                const issuerInfo = q.transaction?.payer_issuer ? `<span class="badge-status badge-paid" style="font-size: 0.75rem;">${q.transaction.payer_issuer}</span>` : `<span style="color: var(--text-muted); font-size: 0.75rem;">-</span>`;
+
+                return `
+                    <tr>
+                        <td style="font-family: var(--font-mono); font-weight: 600;">${q.trxId}</td>
+                        <td style="color: var(--text-secondary);">${q.orderId || '-'}</td>
+                        <td style="font-family: var(--font-mono); font-weight: 600;">${formattedAmount}</td>
+                        <td><span class="badge-status ${badgeClass}">${q.status}</span></td>
+                        <td>${issuerInfo}</td>
+                        <td style="color: var(--text-muted);">${createdTime}</td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/qr/${q.qrisId}" target="_blank" class="btn btn-secondary btn-sm">Lihat QR</a>
+                                ${q.status === 'PENDING' ? `
+                                    <button class="btn btn-secondary btn-sm" onclick="verifySingleQris('${q.qrisId}')" title="Cek apakah pembayaran sudah masuk di GoBiz">Cek Mutasi</button>
+                                    <button class="btn btn-primary btn-sm" onclick="simulatePaymentFor('${q.qrisId}')">Simulasi</button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTable() {
+            const q = document.getElementById('inp-search-table').value.toLowerCase();
+            const filtered = activeQrisList.filter(item => 
+                (item.trxId && item.trxId.toLowerCase().includes(q)) || 
+                (item.orderId && item.orderId.toLowerCase().includes(q))
+            );
+            renderTable(filtered);
+        }
+
+        function renderLogs() {
+            const filter = document.getElementById('log-filter-level').value;
+            const container = document.getElementById('logs-stream-container');
+            const filtered = filter === 'ALL' ? rawLogs : rawLogs.filter(l => l.type === filter);
+
+            if (!filtered || filtered.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Tidak ada logs yang sesuai filter.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(log => {
+                const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString('id-ID') : '';
+                return `
+                    <div class="log-entry">
+                        <span class="log-time">[${time}]</span>
+                        <span class="log-level ${log.type}">${log.type}</span>
+                        <span class="log-msg">${log.message}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearLogsView() {
+            rawLogs = [];
+            renderLogs();
+        }
+
+        async function handleCreateQris(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-qris');
+            btn.disabled = true;
+
+            let rawAmount = document.getElementById('inp-amount').value || '';
+            rawAmount = rawAmount.toString().replace(/[^0-9]/g, '');
+            const amount = parseInt(rawAmount, 10);
+            if (!amount || isNaN(amount) || amount <= 0) {
+                showToast("Nominal pembayaran tidak valid");
+                btn.disabled = false;
+                return;
+            }
+            const order_id = document.getElementById('inp-order-id').value;
+            const callback_url = document.getElementById('inp-callback-url').value;
+            const return_url = document.getElementById('inp-return-url').value;
+
+            try {
+                const res = await fetch('/create-qris', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify({ amount, order_id, callback_url, return_url })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast("QRIS Dinamis berhasil dibuat!");
+                    currentActiveQris = data.data;
+                    displayActivePreview(data.data);
+                    refreshDashboardData();
+                } else {
+                    showToast(data.message || "Gagal membuat QRIS");
+                }
+            } catch (err) {
+                showToast("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function displayActivePreview(item) {
+            document.getElementById('qr-placeholder').style.display = 'none';
+            document.getElementById('qr-active-preview').style.display = 'block';
+
+            const qrImgUrl = item.qr_image_url || ('/qr/' + item.qris_id + '/image.png');
+            document.getElementById('preview-qr-img').src = qrImgUrl;
+
+            const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.amount);
+            document.getElementById('preview-amount').innerText = formatted;
+            document.getElementById('preview-trx-id').innerText = item.trx_id;
+            document.getElementById('preview-open-link').href = item.qris_url;
+
+            const statusBadge = document.getElementById('preview-status-badge');
+            statusBadge.style.display = 'inline-flex';
+            statusBadge.className = 'badge-status badge-pending';
+            statusBadge.innerText = 'PENDING';
+        }
+
+        function copyPreviewString() {
+            if (!currentActiveQris) return;
+            navigator.clipboard.writeText(currentActiveQris.qris_code).then(() => {
+                showToast("String EMVCo berhasil disalin!");
+            });
+        }
+
+        async function simulateActiveQrisPayment() {
+            if (!currentActiveQris) return;
+            simulatePaymentFor(currentActiveQris.qris_id);
+        }
+
+        async function simulatePaymentFor(qrisId) {
+            try {
+                const res = await fetch('/api/simulate-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qris_id: qrisId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Pembayaran simulasi berhasil diverifikasi lunas!");
+                    const statusBadge = document.getElementById('preview-status-badge');
+                    if (statusBadge) {
+                        statusBadge.className = 'badge-status badge-paid';
+                        statusBadge.innerText = 'PAID';
+                    }
+                    refreshDashboardData();
+                } else {
+                    showToast(data.message || "Gagal simulasi pembayaran");
+                }
+            } catch (err) {
+                showToast("Error: " + err.message);
+            }
+        }
+
+        function handleEndpointChange() {
+            const ep = document.getElementById('api-select-endpoint').value;
+            const payload = document.getElementById('api-request-payload');
+            if (ep === 'create_qris') {
+                payload.value = JSON.stringify({ amount: 25000, order_id: "TEST-01" }, null, 2);
+            } else if (ep === 'check_payment') {
+                payload.value = JSON.stringify({ amount: 25000 }, null, 2);
+            } else {
+                payload.value = "{}";
+            }
+        }
+
+        async function sendApiPlaygroundRequest() {
+            const ep = document.getElementById('api-select-endpoint').value;
+            const payloadText = document.getElementById('api-request-payload').value;
+            const display = document.getElementById('api-response-display');
+            const meta = document.getElementById('api-response-meta');
+
+            display.innerText = "// Mengirim permintaan...";
+            const start = performance.now();
+
+            let url = '/api/health';
+            let method = 'GET';
+            let headers = { 'x-api-key': API_KEY, 'Content-Type': 'application/json' };
+            let body = null;
+
+            if (ep === 'create_qris') {
+                url = '/create-qris';
+                method = 'POST';
+                body = payloadText;
+            } else if (ep === 'check_payment') {
+                url = '/check-payment?amount=25000';
+                method = 'GET';
+            } else if (ep === 'token_status') {
+                url = '/token-status';
+            } else if (ep === 'transactions') {
+                url = '/transactions';
+            } else if (ep === 'logs') {
+                url = '/api/logs';
+            }
+
+            try {
+                const res = await fetch(url, { method, headers, body });
+                const dur = Math.round(performance.now() - start);
+                meta.innerText = `Status: ${res.status} ${res.statusText} | Waktu: ${dur}ms`;
+                const json = await res.json();
+                display.innerText = JSON.stringify(json, null, 2);
+            } catch (err) {
+                const dur = Math.round(performance.now() - start);
+                meta.innerText = `Error: ${err.message} | Waktu: ${dur}ms`;
+                display.innerText = String(err);
+            }
+        }
+
+        // Initial fetch
+        refreshDashboardData();
+        setInterval(refreshDashboardData, 8000);
+    </script>
+</body>
+</html>
