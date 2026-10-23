@@ -2,36 +2,38 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pembayaran QRIS - {{FORMATTED_AMOUNT}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{MERCHANT_NAME}} • Pembayaran QRIS {{FORMATTED_AMOUNT}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-canvas: #09090b;
-            --bg-surface: #121215;
-            --bg-surface-elevated: #18181c;
+            --brand-primary: {{BRAND_COLOR}};
+            --brand-end: {{BRAND_COLOR_END}};
+            --bg-canvas: #090d16;
+            --bg-surface: #101623;
+            --bg-surface-elevated: #161f30;
+            --bg-surface-input: #0c121d;
             --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.16);
-            --accent-primary: #00aed9;
-            --accent-hover: #0098bd;
-            --accent-foreground: #ffffff;
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --text-muted: #94949e;
+            --border-highlight: rgba(255, 255, 255, 0.16);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
             --success: #10b981;
-            --success-bg: rgba(16, 185, 129, 0.1);
-            --success-border: rgba(16, 185, 129, 0.25);
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --success-border: rgba(16, 185, 129, 0.3);
             --warning: #f59e0b;
-            --warning-bg: rgba(245, 158, 11, 0.1);
-            --warning-border: rgba(245, 158, 11, 0.25);
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --warning-border: rgba(245, 158, 11, 0.3);
             --danger: #ef4444;
-            --danger-bg: rgba(239, 68, 68, 0.1);
-            --danger-border: rgba(239, 68, 68, 0.25);
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            --danger-border: rgba(239, 68, 68, 0.3);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 22px;
+            --radius-full: 9999px;
             --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -40,137 +42,304 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-canvas);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
             color: var(--text-primary);
             font-family: var(--font-sans);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px 16px;
+            padding: 20px 14px;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
 
-        .checkout-container {
+        .checkout-wrapper {
             width: 100%;
             max-width: 440px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 28px 24px;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
             position: relative;
         }
 
-        .header-brand {
+        .checkout-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+        }
+
+        /* Top Brand Accent Bar */
+        .card-accent-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--brand-primary), var(--brand-end));
+        }
+
+        /* National QRIS Header Banner */
+        .qris-national-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 14px;
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            padding: 8px 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .qris-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qris-badge-text {
+            font-weight: 900;
+            font-size: 1.125rem;
+            letter-spacing: -0.04em;
+            color: #dc2626;
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .qris-badge-text span {
+            color: #0f172a;
+        }
+
+        .gpn-badge-emblem {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .qris-slogan-text {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            text-align: right;
+            line-height: 1.1;
+        }
+
+        /* Provider & Merchant Header */
+        .provider-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
             border-bottom: 1px solid var(--border-subtle);
         }
 
-        .brand-badge {
+        .provider-pill {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(0, 174, 217, 0.12);
-            border: 1px solid rgba(0, 174, 217, 0.25);
-            color: var(--accent-primary);
-            font-size: 0.75rem;
-            font-weight: 600;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-highlight);
+            color: var(--text-primary);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
             letter-spacing: 0.02em;
-            padding: 4px 10px;
-            border-radius: 9999px;
         }
 
-        .merchant-profile-box {
-            text-align: center;
+        .provider-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--brand-primary);
+            box-shadow: 0 0 8px var(--brand-primary);
+        }
+
+        .ref-chip {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            background: var(--bg-surface-elevated);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ref-chip:hover {
+            color: var(--text-primary);
+            border-color: var(--border-highlight);
+        }
+
+        /* Merchant Profile Box */
+        .merchant-box {
             background: var(--bg-surface-elevated);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-md);
             padding: 12px 14px;
             margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .merchant-name-title {
-            font-size: 1.0625rem;
-            font-weight: 700;
+        .merchant-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .merchant-name {
+            font-size: 0.95rem;
+            font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.01em;
             text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .merchant-location-tag {
-            font-size: 0.75rem;
+        .merchant-subinfo {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
             color: var(--text-muted);
+            margin-top: 3px;
+            font-family: var(--font-mono);
+        }
+
+        .merchant-badge-verified {
+            color: var(--success);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* Amount Box */
+        .amount-box {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 14px 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .amount-caption {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .amount-value {
+            font-size: 2.1rem;
+            font-weight: 900;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            letter-spacing: -0.03em;
+            margin: 4px 0 2px 0;
+            line-height: 1.1;
+        }
+
+        .amount-fee-badge {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            margin-top: 3px;
+            font-size: 0.7rem;
+            color: var(--success);
+            font-weight: 600;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
         }
 
-        .trx-ref {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .amount-section {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .amount-label {
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .amount-display {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -0.02em;
-        }
-
-        .qr-card {
+        /* QR Code Container Card */
+        .qr-card-wrapper {
             background: #ffffff;
             border-radius: var(--radius-md);
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            margin-bottom: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
             position: relative;
         }
 
-        .qr-card img {
-            width: 240px;
-            height: 240px;
+        .qr-image-frame {
+            position: relative;
+            width: 230px;
+            height: 230px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .qr-image-frame img {
+            width: 100%;
+            height: 100%;
             display: block;
             image-rendering: pixelated;
         }
 
-        .qr-card-caption {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #0f172a;
-            margin-top: 8px;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+        .qr-scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--brand-primary), transparent);
+            box-shadow: 0 0 8px var(--brand-primary);
+            animation: scanAnim 2.5s ease-in-out infinite alternate;
+            pointer-events: none;
         }
 
+        @keyframes scanAnim {
+            0% { top: 4px; opacity: 0.2; }
+            50% { opacity: 0.9; }
+            100% { top: 226px; opacity: 0.2; }
+        }
+
+        .qr-card-footer {
+            margin-top: 8px;
+            font-size: 0.68rem;
+            font-family: var(--font-mono);
+            color: #334155;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        /* Timer Strip */
         .timer-strip {
             display: flex;
             align-items: center;
@@ -179,8 +348,8 @@
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             padding: 10px 14px;
-            margin-bottom: 16px;
-            font-size: 0.8125rem;
+            margin-bottom: 14px;
+            font-size: 0.78rem;
         }
 
         .timer-label {
@@ -188,27 +357,29 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            font-weight: 500;
         }
 
         .timer-value {
             font-family: var(--font-mono);
-            font-weight: 600;
+            font-weight: 700;
             color: var(--warning);
-            font-size: 0.9375rem;
-            font-variant-numeric: tabular-nums;
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
         }
 
+        /* Status Banner */
         .status-banner {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px;
+            padding: 11px 14px;
             border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 16px;
-            transition: all 140ms ease-out;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
         }
 
         .status-pending {
@@ -229,10 +400,26 @@
             color: var(--danger);
         }
 
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Actions Group */
         .actions-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            margin-bottom: 14px;
         }
 
         .btn-action {
@@ -241,38 +428,26 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px 16px;
-            font-size: 0.875rem;
-            font-weight: 600;
+            padding: 11px 16px;
             border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-family: var(--font-sans);
             cursor: pointer;
+            transition: all 0.15s ease;
             border: 1px solid transparent;
-            user-select: none;
-            transition: background-color 140ms ease-out, transform 60ms ease-out, border-color 140ms ease-out;
-        }
-
-        .btn-action:active {
-            transform: scale(0.98);
-        }
-
-        .btn-action:focus-visible {
-            outline: 2px solid var(--accent-primary);
-            outline-offset: 2px;
-        }
-
-        .btn-action:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+            text-decoration: none;
         }
 
         .btn-primary {
-            background: var(--accent-primary);
-            color: var(--accent-foreground);
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-end));
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
+            opacity: 0.95;
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
@@ -281,71 +456,24 @@
             border-color: var(--border-subtle);
         }
 
-        .btn-secondary:hover:not(:disabled) {
-            background: #202026;
-            border-color: var(--border-hover);
+        .btn-secondary:hover {
+            background: #1c273c;
+            border-color: var(--border-highlight);
         }
 
-        .btn-simulate {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            border: 1px dashed rgba(16, 185, 129, 0.4);
-            font-size: 0.8125rem;
-            padding: 8px 12px;
-        }
-
-        .btn-simulate:hover:not(:disabled) {
-            background: rgba(16, 185, 129, 0.25);
-        }
-
-        .auto-poll-strip {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 14px;
-        }
-
-        .auto-poll-strip input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            accent-color: var(--accent-primary);
-            cursor: pointer;
-        }
-
-        .success-receipt {
-            display: none;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--success-border);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            margin-top: 16px;
-            text-align: left;
-        }
-
-        .receipt-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8125rem;
-            padding: 4px 0;
-            color: var(--text-secondary);
-        }
-
-        .receipt-row span:last-child {
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-weight: 500;
+        .btn-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
         }
 
         .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #ffffff;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-top-color: currentColor;
             border-radius: 50%;
-            animation: spin 700ms linear infinite;
+            animation: spin 0.8s linear infinite;
             display: none;
         }
 
@@ -353,27 +481,167 @@
             to { transform: rotate(360deg); }
         }
 
-        .footer-note {
-            text-align: center;
-            font-size: 0.6875rem;
-            color: var(--text-muted);
-            margin-top: 20px;
+        /* Payment Guide Accordion */
+        .guide-box {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 14px;
         }
 
+        .guide-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .guide-header:hover {
+            color: var(--text-primary);
+        }
+
+        .guide-content {
+            padding: 0 14px 12px 14px;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-subtle);
+            display: none;
+        }
+
+        .guide-content.open {
+            display: block;
+        }
+
+        .guide-steps {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .guide-step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .guide-step-num {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* Success Receipt Card */
+        .success-receipt {
+            display: none;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--success-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 14px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed var(--border-subtle);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .receipt-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.74rem;
+            padding: 4px 0;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+        }
+
+        .receipt-row strong {
+            color: var(--text-primary);
+        }
+
+        /* Supported Apps Banner */
+        .supported-apps {
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 14px;
+            line-height: 1.4;
+        }
+
+        .supported-apps-icons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .app-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        /* Toast notification */
         .toast {
             position: fixed;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-hover);
-            color: var(--text-primary);
-            font-size: 0.8125rem;
-            padding: 8px 16px;
-            border-radius: 9999px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
-            z-index: 100;
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid var(--border-highlight);
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            font-size: 0.78rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            white-space: nowrap;
             pointer-events: none;
         }
 
@@ -383,117 +651,189 @@
     </style>
 </head>
 <body>
-    <div class="checkout-container">
-        <header class="header-brand">
-            <div class="brand-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                    <line x1="2" y1="10" x2="22" y2="10"></line>
-                </svg>
-                <span>GoPay Merchant • QRIS</span>
+
+    <div class="checkout-wrapper">
+        <main class="checkout-card">
+            <div class="card-accent-bar"></div>
+
+            <!-- National QRIS & GPN Header -->
+            <div class="qris-national-header">
+                <div class="qris-logo-group">
+                    <div class="qris-badge-text">QRIS<span>.</span></div>
+                    <div class="gpn-badge-emblem">GPN</div>
+                </div>
+                <div class="qris-slogan-text">
+                    Satu QRIS<br>Untuk Semua
+                </div>
             </div>
-            <div class="trx-ref">{{TRX_ID}}</div>
-        </header>
 
-        <section class="merchant-profile-box">
-            <div class="merchant-name-title">{{MERCHANT_NAME}}</div>
-            <div class="merchant-location-tag">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span>{{MERCHANT_CITY}}</span>
+            <!-- Provider Badge & Reference -->
+            <div class="provider-strip">
+                <div class="provider-pill">
+                    <span class="provider-dot"></span>
+                    <span>{{BRAND_BADGE}}</span>
+                </div>
+                <div class="ref-chip" onclick="copyText('{{TRX_ID}}', 'ID Transaksi tersalin')" title="Klik untuk salin TRX ID">
+                    <i class="fa-regular fa-copy mr-1"></i>{{TRX_ID}}
+                </div>
             </div>
-        </section>
 
-        <section class="amount-section">
-            <div class="amount-label">Total Pembayaran</div>
-            <div class="amount-display">{{FORMATTED_AMOUNT}}</div>
-        </section>
+            <!-- Merchant Info Box -->
+            <section class="merchant-box">
+                <div class="merchant-details">
+                    <div class="merchant-name" id="merchant-name-el">{{MERCHANT_NAME}}</div>
+                    <div class="merchant-subinfo">
+                        <span><i class="fa-solid fa-location-dot mr-1"></i>{{MERCHANT_CITY}}</span>
+                        <span>•</span>
+                        <span>NMID: {{MERCHANT_NMID}}</span>
+                    </div>
+                </div>
+                <div class="merchant-badge-verified" title="Merchant Terverifikasi Resmi">
+                    <i class="fa-solid fa-circle-check text-base"></i>
+                </div>
+            </section>
 
-        <div class="qr-card">
-            <img src="{{QR_IMAGE_URL}}" alt="QRIS Code" id="qr-image">
-            <div class="qr-card-caption">{{MERCHANT_NAME}} • ASPI / QRIS</div>
-        </div>
+            <!-- Total Payment Amount -->
+            <section class="amount-box">
+                <div class="amount-caption">Total Pembayaran</div>
+                <div class="amount-value">{{FORMATTED_AMOUNT}}</div>
+                <div class="amount-fee-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Bebas Biaya Admin (0% MDR)</span>
+                </div>
+            </section>
 
-        <div class="timer-strip">
-            <span class="timer-label">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                Batas Waktu Bayar
-            </span>
-            <span class="timer-value" id="timer-text">05:00</span>
-        </div>
-
-        <div class="status-banner status-pending" id="status-banner">
-            <span id="status-icon-svg">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </span>
-            <span id="status-text">Menunggu Pembayaran</span>
-        </div>
-
-        <div class="actions-group">
-            <button class="btn-action btn-primary" id="btn-check" onclick="checkStatusManual()">
-                <span class="spinner" id="btn-spinner"></span>
-                <span id="btn-label">Cek Status Pembayaran</span>
-            </button>
-
-            <button class="btn-action btn-secondary" onclick="copyQrisCode()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                <span>Salin String QRIS EMVCo</span>
-            </button>
-
-            <a href="{{QR_IMAGE_URL}}" download="qris-{{TRX_ID}}.png" class="btn-action btn-secondary" style="text-decoration: none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                <span>Unduh Gambar QRIS (HD)</span>
-            </a>
-
-            {{SIMULATE_BUTTON}}
-        </div>
-
-        <div class="auto-poll-strip">
-            <input type="checkbox" id="chk-auto" onchange="toggleAutoPoll(this)">
-            <label for="chk-auto">Auto-polling setiap 7 detik</label>
-        </div>
-
-        <div class="success-receipt" id="success-receipt">
-            <div class="receipt-row">
-                <span>Order ID</span>
-                <span id="rcpt-order">-</span>
+            <!-- QR Code Card -->
+            <div class="qr-card-wrapper">
+                <div class="qr-image-frame" id="qr-frame">
+                    <img src="{{QR_IMAGE_URL}}" alt="QRIS {{MERCHANT_NAME}}" id="qr-image">
+                    <div class="qr-scan-line" id="scan-line"></div>
+                </div>
+                <div class="qr-card-footer">
+                    <span>{{MERCHANT_NAME}} • A01 (Tag 01=12)</span>
+                </div>
             </div>
-            <div class="receipt-row">
-                <span>Penerbit / Sumber</span>
-                <span id="rcpt-issuer">-</span>
-            </div>
-            <div class="receipt-row">
-                <span>Waktu Pelunasan</span>
-                <span id="rcpt-time">-</span>
-            </div>
-            <div class="receipt-row">
-                <span>Status</span>
-                <span style="color: var(--success); font-weight: 600;">LUNAS</span>
-            </div>
-        </div>
 
-        <div class="footer-note">
-            Didukung oleh GoPay Merchant Partner Gateway Engine
-        </div>
+            <!-- Timer Countdown -->
+            <div class="timer-strip" id="timer-strip-el">
+                <span class="timer-label">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>Sisa Waktu Pembayaran</span>
+                </span>
+                <span class="timer-value" id="timer-text">05:00</span>
+            </div>
+
+            <!-- Status Banner -->
+            <div class="status-banner status-pending" id="status-banner">
+                <span class="pulse-dot" id="status-dot"></span>
+                <span id="status-text">Menunggu Pembayaran Masuk...</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions-group">
+                <button class="btn-action btn-primary" id="btn-check" onclick="checkStatusManual()">
+                    <span class="spinner" id="btn-spinner"></span>
+                    <i class="fa-solid fa-rotate mr-1" id="btn-icon"></i>
+                    <span id="btn-label">Cek Status Pembayaran</span>
+                </button>
+
+                <button class="btn-action btn-secondary" onclick="copyQrisCode()">
+                    <i class="fa-solid fa-barcode"></i>
+                    <span>Salin String QRIS EMVCo</span>
+                </button>
+
+                <a href="{{QR_IMAGE_URL}}" download="qris-{{TRX_ID}}.png" class="btn-action btn-secondary">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Unduh Gambar QRIS (HD)</span>
+                </a>
+
+                {{SIMULATE_BUTTON}}
+            </div>
+
+            <!-- Success Receipt (Appears when PAID) -->
+            <div class="success-receipt" id="success-receipt">
+                <div class="receipt-header">
+                    <i class="fa-solid fa-circle-check text-2xl text-emerald-400 mb-1"></i>
+                    <div class="receipt-title">PEMBAYARAN BERHASIL LUNAS</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Terima kasih atas pembayaran Anda</div>
+                </div>
+                <div class="receipt-row">
+                    <span>Order ID</span>
+                    <strong id="rcpt-order">{{ORDER_ID}}</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>Toko / Merchant</span>
+                    <strong>{{MERCHANT_NAME}}</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>Sumber Dana / Bank</span>
+                    <strong id="rcpt-issuer">-</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>Nomor RRN / Ref</span>
+                    <strong id="rcpt-rrn">-</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>Waktu Pelunasan</span>
+                    <strong id="rcpt-time">-</strong>
+                </div>
+                <div class="receipt-row" style="border-top: 1px dashed var(--border-subtle); margin-top: 6px; padding-top: 6px;">
+                    <span>Jumlah Dibayar</span>
+                    <strong style="color: var(--success); font-size: 0.85rem;">{{FORMATTED_AMOUNT}}</strong>
+                </div>
+            </div>
+
+            <!-- How to Pay Accordion -->
+            <div class="guide-box">
+                <div class="guide-header" onclick="toggleGuide()">
+                    <span><i class="fa-regular fa-circle-question mr-1.5"></i>Panduan Cara Membayar</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200" id="guide-chevron"></i>
+                </div>
+                <div class="guide-content" id="guide-content">
+                    <ul class="guide-steps">
+                        <li class="guide-step-item">
+                            <span class="guide-step-num">1</span>
+                            <span>Buka aplikasi m-Banking (BCA, Mandiri, BRI, BNI) atau E-Wallet (ShopeePay, GoPay, OVO, Dana).</span>
+                        </li>
+                        <li class="guide-step-item">
+                            <span class="guide-step-num">2</span>
+                            <span>Pilih menu <strong>Pindai / Scan QRIS</strong> lalu arahkan kamera ke barcode di atas.</span>
+                        </li>
+                        <li class="guide-step-item">
+                            <span class="guide-step-num">3</span>
+                            <span>Periksa nama toko <strong>{{MERCHANT_NAME}}</strong> dan nominal bayar, lalu selesaikan pembayaran.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Supported Apps Banner -->
+            <div class="supported-apps">
+                <span>Dapat dibayar menggunakan semua aplikasi perbankan & dompet digital:</span>
+                <div class="supported-apps-icons">
+                    <span class="app-chip">BCA Mobile</span>
+                    <span class="app-chip">Livin' Mandiri</span>
+                    <span class="app-chip">BRImo</span>
+                    <span class="app-chip">BNI Mobile</span>
+                    <span class="app-chip">ShopeePay</span>
+                    <span class="app-chip">GoPay</span>
+                    <span class="app-chip">DANA</span>
+                    <span class="app-chip">OVO</span>
+                    <span class="app-chip">SeaBank</span>
+                    <span class="app-chip">LinkAja</span>
+                </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="footer-note">
+                {{FOOTER_NOTE}}
+            </div>
+
+        </main>
     </div>
 
-    <div class="toast" id="toast">String QRIS berhasil disalin</div>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Tersalin ke clipboard</div>
 
     <script>
         const qrisId = "{{QRIS_ID}}";
@@ -512,22 +852,38 @@
             const toast = document.getElementById('toast');
             toast.innerText = msg;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
+            setTimeout(() => toast.classList.remove('show'), 2200);
         }
 
-        function copyQrisCode() {
-            if (!qrisCode) return;
-            navigator.clipboard.writeText(qrisCode).then(() => {
-                showToast("Kode string QRIS berhasil disalin!");
+        function copyText(text, msg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(msg || "Tersalin ke clipboard");
             }).catch(() => {
                 const ta = document.createElement('textarea');
-                ta.value = qrisCode;
+                ta.value = text;
                 document.body.appendChild(ta);
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                showToast("Kode string QRIS berhasil disalin!");
+                showToast(msg || "Tersalin ke clipboard");
             });
+        }
+
+        function copyQrisCode() {
+            if (!qrisCode) return;
+            copyText(qrisCode, "String QRIS EMVCo berhasil disalin!");
+        }
+
+        function toggleGuide() {
+            const content = document.getElementById('guide-content');
+            const chevron = document.getElementById('guide-chevron');
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
         }
 
         function updateCountdown() {
@@ -540,10 +896,15 @@
                 document.getElementById('timer-text').innerText = "00:00";
                 const banner = document.getElementById('status-banner');
                 banner.className = "status-banner status-expired";
-                document.getElementById('status-text').innerText = "Batas Waktu Berakhir - Periksa Mutasi";
+                document.getElementById('status-dot').style.display = 'none';
+                document.getElementById('status-text').innerText = "Batas Waktu Bayar Berakhir";
+                
                 const simBtn = document.getElementById('btn-simulate');
                 if (simBtn) simBtn.disabled = true;
+                const scanLine = document.getElementById('scan-line');
+                if (scanLine) scanLine.style.display = 'none';
                 clearInterval(countdownInterval);
+                stopAutoPoll();
                 return;
             }
 
@@ -557,15 +918,17 @@
         updateCountdown();
 
         async function checkStatusManual() {
-            if (isChecking || isPaid) return;
+            if (isChecking || isPaid || isExpired) return;
             isChecking = true;
 
             const btn = document.getElementById('btn-check');
             const spinner = document.getElementById('btn-spinner');
+            const icon = document.getElementById('btn-icon');
             const label = document.getElementById('btn-label');
 
             if (btn) btn.disabled = true;
             if (spinner) spinner.style.display = 'inline-block';
+            if (icon) icon.style.display = 'none';
             if (label) label.innerText = 'Memeriksa mutasi...';
 
             try {
@@ -581,18 +944,17 @@
                     document.getElementById('status-text').innerText = "Belum Ada Mutasi Masuk";
                     setTimeout(() => {
                         if (!isPaid && !isExpired) {
-                            document.getElementById('status-text').innerText = "Menunggu Pembayaran";
+                            document.getElementById('status-text').innerText = "Menunggu Pembayaran Masuk...";
                         }
-                    }, 2000);
+                    }, 1800);
                 }
             } catch (err) {
                 console.error("Gagal periksa status:", err);
             } finally {
                 isChecking = false;
-                if (!isPaid) {
-                    if (btn) btn.disabled = false;
-                }
+                if (!isPaid && btn) btn.disabled = false;
                 if (spinner) spinner.style.display = 'none';
+                if (icon) icon.style.display = 'inline-block';
                 if (label) label.innerText = 'Cek Status Pembayaran';
             }
         }
@@ -626,14 +988,18 @@
             stopAutoPoll();
             clearInterval(countdownInterval);
 
+            // Hide scan line
+            const scanLine = document.getElementById('scan-line');
+            if (scanLine) scanLine.style.display = 'none';
+
+            // Hide timer strip
+            const timerStrip = document.getElementById('timer-strip-el');
+            if (timerStrip) timerStrip.style.display = 'none';
+
             const banner = document.getElementById('status-banner');
             banner.className = "status-banner status-paid";
-            document.getElementById('status-icon-svg').innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            `;
-            document.getElementById('status-text').innerText = "Pembayaran Berhasil Terverifikasi";
+            document.getElementById('status-dot').style.display = 'none';
+            banner.innerHTML = '<i class="fa-solid fa-circle-check text-base"></i><span>PEMBAYARAN LUNAS</span>';
 
             const btn = document.getElementById('btn-check');
             if (btn) btn.style.display = 'none';
@@ -643,10 +1009,13 @@
 
             if (tx) {
                 document.getElementById('rcpt-order').innerText = tx.order_id || tx.transaction_id || '-';
-                document.getElementById('rcpt-issuer').innerText = tx.payer_issuer || 'GoPay / Bank';
-                document.getElementById('rcpt-time').innerText = tx.transaction_time ? new Date(tx.transaction_time).toLocaleString('id-ID') : '-';
+                document.getElementById('rcpt-issuer').innerText = tx.payer_issuer || 'QRIS / Bank Transfer';
+                document.getElementById('rcpt-rrn').innerText = tx.reference_id || tx.transaction_id || '-';
+                document.getElementById('rcpt-time').innerText = tx.transaction_time ? new Date(tx.transaction_time).toLocaleString('id-ID') : new Date().toLocaleString('id-ID');
                 document.getElementById('success-receipt').style.display = 'block';
             }
+
+            showToast("Pembayaran Berhasil Diverifikasi Lunas!");
 
             if (returnUrl && returnUrl !== 'undefined' && returnUrl !== '') {
                 setTimeout(() => {
@@ -658,10 +1027,10 @@
         function startAutoPoll() {
             stopAutoPoll();
             pollTimer = setInterval(() => {
-                if (!isChecking && !isPaid) {
+                if (!isChecking && !isPaid && !isExpired) {
                     checkStatusManual();
                 }
-            }, 5000);
+            }, 3000);
         }
 
         function stopAutoPoll() {
@@ -671,24 +1040,12 @@
             }
         }
 
-        function toggleAutoPoll(chk) {
-            if (chk.checked) {
-                startAutoPoll();
-            } else {
-                stopAutoPoll();
-            }
-        }
-
         // Initialize state
         if (serverIsPaid && serverTx) {
             onPaymentSuccess(serverTx);
         } else {
-            // Immediate check on load
-            checkStatusManual();
-            const chk = document.getElementById('chk-auto');
-            if (chk && chk.checked) {
-                startAutoPoll();
-            }
+            // Start automatic polling every 3 seconds
+            startAutoPoll();
         }
     </script>
 </body>

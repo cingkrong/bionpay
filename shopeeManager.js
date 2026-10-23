@@ -38,6 +38,8 @@ let currentShopeeToken = process.env.SHOPEE_TOKEN || '';
 let isTokenValid = true;
 let tokenNotifSent = false;
 let lastCheckTime = 0;
+let lastMerchantName = 'Bion Digital';
+let lastStoreName = 'Bion Digital';
 
 // Read dynamic SHOPEE_TOKEN from .env or memory
 function getShopeeToken() {
@@ -203,18 +205,24 @@ async function checkShopeeToken() {
     }
 
     const nowUnix = Math.floor(Date.now() / 1000);
-    const startUnix = nowUnix - 3600;
+    const startUnix = nowUnix - 7 * 86400; // Cek window 7 hari terakhir agar mutasi & info merchant terambil
 
     try {
-        const result = await callShopeeAPI(startUnix, nowUnix, 1, '');
+        const result = await callShopeeAPI(startUnix, nowUnix, 5, '', token);
         if (!result || result.code !== 0) {
-            const errMsg = result ? result.msg : 'Empty response';
+            const errMsg = result ? (result.msg || `Error code ${result.code}`) : 'Empty response';
             isTokenValid = false;
             if (!tokenNotifSent) {
                 tokenNotifSent = true;
                 await sendTelegramNotification(`⚠️ <b>[BionPay Alert]</b> ShopeePay Token kedaluwarsa atau tidak valid!\nDetail: ${errMsg}\nSilakan perbarui SHOPEE_TOKEN di Dashboard.`);
             }
             return false;
+        }
+
+        if (result.data && result.data.list && result.data.list.length > 0) {
+            const first = result.data.list[0];
+            if (first.merchantName) lastMerchantName = first.merchantName;
+            if (first.storeName) lastStoreName = first.storeName;
         }
 
         isTokenValid = true;
@@ -294,13 +302,13 @@ async function verifyShopeePayment(amount, startTime, scopeId = null, tokenOverr
     return null;
 }
 
-// Get live mutations list from ShopeePay
-async function getShopeeMutations(rangeDays = 1, pageSize = 30) {
+// Get live mutations list from ShopeePay with enriched details (issuer, RRN, merchant name)
+async function getShopeeMutations(rangeDays = 7, pageSize = 50) {
     const token = getShopeeToken();
     if (!token) return [];
 
     const now = Math.floor(Date.now() / 1000);
-    const days = parseInt(rangeDays, 10) || 1;
+    const days = parseInt(rangeDays, 10) || 7;
     const startTime = now - days * 24 * 3600;
 
     try {
@@ -308,19 +316,55 @@ async function getShopeeMutations(rangeDays = 1, pageSize = 30) {
         if (!result || result.code !== 0) return [];
 
         const list = (result.data && result.data.list) || [];
-        return list.map(t => {
+        
+        // Enrich top 30 transactions with detailed issuer & reference id
+        const enriched = await Promise.all(list.slice(0, 30).map(async (t) => {
             const formatted = formatShopeeTransaction(t);
+            let issuer = 'ShopeePay / QRIS';
+            let rrn = t.externalTransactionId || '-';
+            try {
+                const detail = await callShopeeDetailAPI(t.displayTransactionId || t.transactionId, token);
+                if (detail && detail.code === 0 && detail.data) {
+                    if (detail.data.issuer) issuer = detail.data.issuer;
+                    if (detail.data.reference_id) rrn = detail.data.reference_id;
+                }
+            } catch (e) {}
+
             return {
                 id: formatted.id,
+                transaction_id: formatted.id,
                 order_id: formatted.order_id,
                 amount: formatted.amount,
                 status: formatted.status,
-                issuer: formatted.issuer,
+                issuer: issuer,
+                merchant_name: t.merchantName || t.storeName || lastMerchantName || 'Bion Digital',
                 time: formatted.time,
+                timestamp: formatted.timestamp,
                 channel: 'SHOPEEPAY_QR',
+                rrn: rrn,
+                provider: 'SHOPEEPAY'
+            };
+        }));
+
+        const remaining = list.slice(30).map(t => {
+            const formatted = formatShopeeTransaction(t);
+            return {
+                id: formatted.id,
+                transaction_id: formatted.id,
+                order_id: formatted.order_id,
+                amount: formatted.amount,
+                status: formatted.status,
+                issuer: 'ShopeePay / QRIS',
+                merchant_name: t.merchantName || t.storeName || lastMerchantName || 'Bion Digital',
+                time: formatted.time,
+                timestamp: formatted.timestamp,
+                channel: 'SHOPEEPAY_QR',
+                rrn: t.externalTransactionId || '-',
                 provider: 'SHOPEEPAY'
             };
         });
+
+        return [...enriched, ...remaining];
     } catch (e) {
         return [];
     }
@@ -332,7 +376,8 @@ function getShopeeStatus() {
     return {
         configured: hasToken,
         valid: hasToken && isTokenValid,
-        merchant_name: null,
+        merchant_name: lastMerchantName || lastStoreName || (hasToken && isTokenValid ? 'Bion Digital' : null),
+        store_name: lastStoreName || 'Bion Digital',
         expiry: null,
         last_checked: lastCheckTime ? new Date(lastCheckTime).toISOString() : null
     };
