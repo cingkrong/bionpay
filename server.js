@@ -1613,6 +1613,22 @@ app.get('/api/logs', apiKeyAuth, (req, res) => {
     res.json({ success: true, logs: activityLogs });
 });
 
+// Global error resilience: tangani unhandled exception & rejection agar daemon tidak crash
+process.on('uncaughtException', (err) => {
+    console.error('[UNCAUGHT EXCEPTION]', err);
+    try {
+        logActivity('ERROR', `Uncaught Exception: ${err.message}`);
+    } catch (e) {}
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[UNHANDLED REJECTION]', reason);
+    try {
+        const msg = reason && reason.message ? reason.message : String(reason);
+        logActivity('WARNING', `Unhandled Rejection: ${msg}`);
+    } catch (e) {}
+});
+
 // Start Server
 app.listen(PORT, () => {
     shopeeManager.startTokenChecker();

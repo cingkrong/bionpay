@@ -242,8 +242,10 @@ async function checkShopeeToken() {
 // Start periodic token check every 5 minutes
 function startTokenChecker(intervalMs = 5 * 60 * 1000) {
     if (getShopeeToken()) {
-        checkShopeeToken();
-        setInterval(checkShopeeToken, intervalMs);
+        checkShopeeToken().catch(() => {});
+        setInterval(() => {
+            checkShopeeToken().catch(() => {});
+        }, intervalMs);
     }
 }
 
