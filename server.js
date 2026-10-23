@@ -42,6 +42,10 @@ function getEnvConfig() {
     let shopeeToken = shopeeManager.getShopeeToken();
     let telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
     let telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    let enableUniqueCode = process.env.ENABLE_UNIQUE_CODE !== 'false';
+    let uniqueCodeMin = parseInt(process.env.UNIQUE_CODE_MIN, 10) || 1;
+    let uniqueCodeMax = parseInt(process.env.UNIQUE_CODE_MAX, 10) || 999;
+    let uniqueCodeType = (process.env.UNIQUE_CODE_TYPE || 'ADD').toUpperCase();
 
     try {
         const envPath = path.join(__dirname, '.env');
@@ -57,11 +61,29 @@ function getEnvConfig() {
                 if (trimmed.startsWith('SHOPEE_QRIS_STATIC=')) shopeeQrisStatic = trimmed.substring('SHOPEE_QRIS_STATIC='.length).trim();
                 if (trimmed.startsWith('TELEGRAM_BOT_TOKEN=')) telegramBotToken = trimmed.substring('TELEGRAM_BOT_TOKEN='.length).trim();
                 if (trimmed.startsWith('TELEGRAM_CHAT_ID=')) telegramChatId = trimmed.substring('TELEGRAM_CHAT_ID='.length).trim();
+                if (trimmed.startsWith('ENABLE_UNIQUE_CODE=')) enableUniqueCode = trimmed.substring('ENABLE_UNIQUE_CODE='.length).trim() !== 'false';
+                if (trimmed.startsWith('UNIQUE_CODE_MIN=')) uniqueCodeMin = parseInt(trimmed.substring('UNIQUE_CODE_MIN='.length).trim(), 10) || 1;
+                if (trimmed.startsWith('UNIQUE_CODE_MAX=')) uniqueCodeMax = parseInt(trimmed.substring('UNIQUE_CODE_MAX='.length).trim(), 10) || 999;
+                if (trimmed.startsWith('UNIQUE_CODE_TYPE=')) uniqueCodeType = trimmed.substring('UNIQUE_CODE_TYPE='.length).trim().toUpperCase();
             }
         }
     } catch (e) {}
 
-    return { qrisStatic, shopeeQrisStatic, merchantName, merchantCity, merchantId, sandbox, shopeeToken, telegramBotToken, telegramChatId };
+    return { 
+        qrisStatic, 
+        shopeeQrisStatic, 
+        merchantName, 
+        merchantCity, 
+        merchantId, 
+        sandbox, 
+        shopeeToken, 
+        telegramBotToken, 
+        telegramChatId,
+        enableUniqueCode,
+        uniqueCodeMin,
+        uniqueCodeMax,
+        uniqueCodeType
+    };
 }
 
 const PORT = process.env.PORT || 3000;
@@ -291,6 +313,45 @@ async function autoMatchPendingQris() {
     }
 }
 setInterval(autoMatchPendingQris, 10000); // Otomatis periksa setiap 10 detik
+
+// Algoritma Generator Kode Unik Aman (Bebas Tabrakan pada Sesi Pending Aktif)
+function generateSafeUniqueCode(baseAmount, minCode = 1, maxCode = 999, type = 'ADD') {
+    const min = Math.max(1, parseInt(minCode, 10) || 1);
+    const max = Math.max(min, parseInt(maxCode, 10) || 999);
+    const range = max - min + 1;
+    const now = Date.now();
+
+    // Kumpulkan seluruh nominal dan kode unik yang sedang berstatus PENDING (belum expired)
+    const activeUsedAmounts = new Set();
+    const activeUsedCodes = new Set();
+
+    for (const [_, q] of qrisStore.entries()) {
+        if (q.status === 'PENDING' && q.expiresAt && q.expiresAt.getTime() > now) {
+            if (q.amount) activeUsedAmounts.add(q.amount);
+            if (q.uniqueCode) activeUsedCodes.add(q.uniqueCode);
+        }
+    }
+
+    // Coba pencarian acak hingga 60 kali agar kode bervariasi dan tidak tabrakan
+    for (let attempt = 0; attempt < 60; attempt++) {
+        const candidate = Math.floor(Math.random() * range) + min;
+        const candidateAmount = type === 'SUBTRACT' ? Math.max(1, baseAmount - candidate) : (baseAmount + candidate);
+        if (!activeUsedCodes.has(candidate) && !activeUsedAmounts.has(candidateAmount)) {
+            return candidate;
+        }
+    }
+
+    // Jika terjadi saturasi tinggi, scan linear mencari angka pertama yang belum terpakai
+    for (let c = min; c <= max; c++) {
+        const candidateAmount = type === 'SUBTRACT' ? Math.max(1, baseAmount - c) : (baseAmount + c);
+        if (!activeUsedCodes.has(c) && !activeUsedAmounts.has(candidateAmount)) {
+            return c;
+        }
+    }
+
+    // Fallback darurat jika seluruh slot terisi penuh
+    return Math.floor(Math.random() * range) + min;
+}
 
 // Hitung Checksum CRC16 EMVCo untuk QRIS
 function calculateCRC16(payload) {
@@ -757,7 +818,13 @@ app.get('/api/dashboard/stats', async (req, res) => {
             port: PORT,
             merchant_name: merchantInfo.name,
             merchant_city: merchantInfo.city,
-            merchant_id: cfg.merchantId || merchantInfo.merchant_id || null
+            merchant_id: cfg.merchantId || merchantInfo.merchant_id || null,
+            unique_code_config: {
+                enabled: cfg.enableUniqueCode,
+                min: cfg.uniqueCodeMin,
+                max: cfg.uniqueCodeMax,
+                type: cfg.uniqueCodeType
+            }
         },
         recent_qris: allQris.slice(0, 50),
         recent_mutations: mutations.slice(0, 50),
@@ -864,9 +931,43 @@ function handleCreateDynamicQRIS(req, res) {
     if (typeof rawAmount === 'string') {
         rawAmount = rawAmount.replace(/[^0-9]/g, '');
     }
-    const amount = parseInt(rawAmount, 10);
-    if (!amount || isNaN(amount) || amount <= 0) {
+    const baseAmount = parseInt(rawAmount, 10);
+    if (!baseAmount || isNaN(baseAmount) || baseAmount <= 0) {
         return res.status(400).json({ success: false, message: 'Nominal pembayaran tidak valid (gunakan ?amount=...)' });
+    }
+
+    const cfg = getEnvConfig();
+
+    // Logika Kode Unik Validasi Pembayaran Otomatis
+    let useUniqueCode = cfg.enableUniqueCode;
+    if (req.body?.use_unique_code !== undefined) {
+        useUniqueCode = req.body.use_unique_code === true || req.body.use_unique_code === 'true' || req.body.use_unique_code === '1' || req.body.use_unique_code === 1;
+    } else if (req.query?.use_unique_code !== undefined) {
+        useUniqueCode = req.query.use_unique_code === 'true' || req.query.use_unique_code === '1';
+    }
+
+    const uniqueCodeType = (req.body?.unique_code_type || req.query?.unique_code_type || cfg.uniqueCodeType || 'ADD').toUpperCase();
+    let uniqueCode = 0;
+
+    if (req.body?.unique_code !== undefined && req.body?.unique_code !== null) {
+        uniqueCode = parseInt(req.body.unique_code, 10) || 0;
+        useUniqueCode = uniqueCode > 0;
+    } else if (req.query?.unique_code !== undefined && req.query?.unique_code !== null) {
+        uniqueCode = parseInt(req.query.unique_code, 10) || 0;
+        useUniqueCode = uniqueCode > 0;
+    } else if (useUniqueCode) {
+        const minCode = req.body?.unique_code_min || req.query?.unique_code_min || cfg.uniqueCodeMin;
+        const maxCode = req.body?.unique_code_max || req.query?.unique_code_max || cfg.uniqueCodeMax;
+        uniqueCode = generateSafeUniqueCode(baseAmount, minCode, maxCode, uniqueCodeType);
+    }
+
+    let finalAmount = baseAmount;
+    if (useUniqueCode && uniqueCode > 0) {
+        if (uniqueCodeType === 'SUBTRACT') {
+            finalAmount = Math.max(1, baseAmount - uniqueCode);
+        } else {
+            finalAmount = baseAmount + uniqueCode;
+        }
     }
 
     const reqProvider = (req.body?.provider || req.query?.provider || 'AUTO').toUpperCase();
@@ -904,7 +1005,7 @@ function handleCreateDynamicQRIS(req, res) {
         return res.status(500).json({ success: false, message: 'QRIS_STATIC atau SHOPEE_QRIS_STATIC belum dikonfigurasi di .env' });
     }
 
-    const dynamicCode = generateDynamicQRIS(staticTemplate, amount);
+    const dynamicCode = generateDynamicQRIS(staticTemplate, finalAmount);
     if (!dynamicCode) {
         return res.status(500).json({ success: false, message: 'Gagal memproses QRIS statis template' });
     }
@@ -921,7 +1022,11 @@ function handleCreateDynamicQRIS(req, res) {
     const qrisData = {
         qrisId,
         data: dynamicCode,
-        amount: parseInt(amount, 10),
+        amount: parseInt(finalAmount, 10),
+        baseAmount: parseInt(baseAmount, 10),
+        uniqueCode: parseInt(uniqueCode, 10),
+        uniqueCodeType,
+        useUniqueCode,
         orderId,
         callbackUrl,
         returnUrl,
@@ -940,7 +1045,7 @@ function handleCreateDynamicQRIS(req, res) {
     const publicUrl = `${protocol}://${host}/qr/${qrisId}`;
     const qrImageUrl = `${protocol}://${host}/qr/${qrisId}/image.png`;
 
-    logActivity('INFO', `QRIS Dinamis dibuat [${chosenProvider}] | TRX-ID: ${trxId} | Nominal: Rp ${parseInt(amount, 10)} | Order ID: ${orderId || '-'}`);
+    logActivity('INFO', `QRIS Dinamis dibuat [${chosenProvider}] | TRX-ID: ${trxId} | Pokok: Rp ${baseAmount} | Kode Unik: ${uniqueCode > 0 ? (uniqueCodeType === 'SUBTRACT' ? '-' : '+') + uniqueCode : '0'} | Total: Rp ${finalAmount} | Order: ${orderId || '-'}`);
 
     res.json({
         success: true,
@@ -952,7 +1057,11 @@ function handleCreateDynamicQRIS(req, res) {
             qris_url: publicUrl,
             qr_image_url: qrImageUrl,
             qris_code: dynamicCode,
-            amount: parseInt(amount, 10),
+            amount: parseInt(finalAmount, 10),
+            base_amount: parseInt(baseAmount, 10),
+            unique_code: parseInt(uniqueCode, 10),
+            unique_code_type: uniqueCodeType,
+            use_unique_code: useUniqueCode,
             callback_url: callbackUrl,
             return_url: returnUrl,
             expires_at: expiresAt.toISOString(),
@@ -1008,6 +1117,32 @@ app.get('/qr/:id', (req, res) => {
     }
 
     const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(qris.amount);
+    const baseAmount = qris.baseAmount || qris.amount;
+    const formattedBaseAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(baseAmount);
+    const uniqueCode = qris.uniqueCode || 0;
+    const uniqueCodeType = qris.uniqueCodeType || 'ADD';
+    const uniqueCodePrefix = uniqueCodeType === 'SUBTRACT' ? '-' : '+';
+
+    let uniqueCodeBreakdownHtml = '';
+    if (uniqueCode > 0) {
+        uniqueCodeBreakdownHtml = `
+            <div class="unique-code-box">
+                <div class="unique-breakdown-row">
+                    <span>Nominal Pokok:</span>
+                    <strong>${formattedBaseAmount}</strong>
+                </div>
+                <div class="unique-breakdown-row">
+                    <span>Kode Unik Validasi:</span>
+                    <strong class="unique-pill">${uniqueCodePrefix}${uniqueCode}</strong>
+                </div>
+                <div class="unique-warning-alert">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>PENTING: Bayar <strong>TEPAT ${formattedAmount}</strong> agar verifikasi mutasi otomatis valid dalam hitungan detik.</span>
+                </div>
+            </div>
+        `;
+    }
+
     const qrImageUrl = `/qr/${req.params.id}/image.png`;
     const cfg = getEnvConfig();
     const isSandbox = cfg.sandbox;
@@ -1019,7 +1154,14 @@ app.get('/qr/:id', (req, res) => {
         let html = fs.readFileSync(checkoutViewPath, 'utf-8');
         html = html
             .replace(/{{FORMATTED_AMOUNT}}/g, formattedAmount)
+            .replace(/{{FORMATTED_BASE_AMOUNT}}/g, formattedBaseAmount)
+            .replace(/{{UNIQUE_CODE}}/g, String(uniqueCode))
+            .replace(/{{UNIQUE_CODE_PREFIX}}/g, uniqueCodePrefix)
+            .replace(/{{UNIQUE_CODE_BREAKDOWN}}/g, uniqueCodeBreakdownHtml)
+            .replace(/{{BASE_AMOUNT_ROW_STYLE}}/g, uniqueCode > 0 ? 'display: flex;' : 'display: none;')
+            .replace(/{{UNIQUE_CODE_ROW_STYLE}}/g, uniqueCode > 0 ? 'display: flex;' : 'display: none;')
             .replace(/{{AMOUNT_RAW}}/g, String(qris.amount))
+            .replace(/{{BASE_AMOUNT_RAW}}/g, String(baseAmount))
             .replace(/{{QR_IMAGE_URL}}/g, qrImageUrl)
             .replace(/{{TRX_ID}}/g, qris.trxId)
             .replace(/{{ORDER_ID}}/g, qris.orderId || qris.trxId)
@@ -1231,6 +1373,9 @@ app.get('/transactions', apiKeyAuth, async (req, res) => {
                     transaction_id: q.trxId,
                     order_id: q.orderId || q.trxId,
                     amount: q.amount,
+                    base_amount: q.baseAmount || q.amount,
+                    unique_code: q.uniqueCode || 0,
+                    unique_code_type: q.uniqueCodeType || 'ADD',
                     status: currentStatus,
                     issuer: currentStatus === 'PENDING' ? 'Menunggu Pembayaran (Semua E-Wallet/Bank)' : 'Kedaluwarsa (Belum Dibayar)',
                     merchant_name: merchantName,

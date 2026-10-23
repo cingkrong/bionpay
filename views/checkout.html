@@ -277,6 +277,56 @@
             border: 1px solid var(--success-border);
             padding: 2px 8px;
             border-radius: var(--radius-full);
+            margin-top: 6px;
+        }
+
+        /* Unique Code Validation Breakdown */
+        .unique-code-box {
+            margin: 10px 0 6px 0;
+            padding: 10px 12px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px dashed rgba(245, 158, 11, 0.35);
+            border-radius: var(--radius-sm);
+            text-align: left;
+        }
+
+        .unique-breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            margin-bottom: 5px;
+        }
+
+        .unique-pill {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            font-size: 0.75rem;
+        }
+
+        .unique-warning-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 0.69rem;
+            color: #fde68a;
+            line-height: 1.35;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(245, 158, 11, 0.25);
+        }
+
+        .unique-warning-alert i {
+            color: #f59e0b;
+            margin-top: 2px;
+            flex-shrink: 0;
         }
 
         /* QR Code Container Card */
@@ -697,6 +747,7 @@
             <section class="amount-box">
                 <div class="amount-caption">Total Pembayaran</div>
                 <div class="amount-value">{{FORMATTED_AMOUNT}}</div>
+                {{UNIQUE_CODE_BREAKDOWN}}
                 <div class="amount-fee-badge">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Bebas Biaya Admin (0% MDR)</span>
@@ -760,6 +811,14 @@
                 <div class="receipt-row">
                     <span>Order ID</span>
                     <strong id="rcpt-order">{{ORDER_ID}}</strong>
+                </div>
+                <div class="receipt-row" id="rcpt-base-row" style="{{BASE_AMOUNT_ROW_STYLE}}">
+                    <span>Nominal Pokok</span>
+                    <strong>{{FORMATTED_BASE_AMOUNT}}</strong>
+                </div>
+                <div class="receipt-row" id="rcpt-unique-row" style="{{UNIQUE_CODE_ROW_STYLE}}">
+                    <span>Kode Unik Validasi</span>
+                    <strong style="color: var(--warning);">{{UNIQUE_CODE_PREFIX}}{{UNIQUE_CODE}}</strong>
                 </div>
                 <div class="receipt-row">
                     <span>Toko / Merchant</span>
