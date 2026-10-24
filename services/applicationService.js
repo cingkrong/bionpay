@@ -60,18 +60,24 @@ class ApplicationService {
     }
 
     /**
-     * Get all applications
+     * Retrieve all applications
      */
     async getAllApplications() {
-        const res = await db.query(`
-            SELECT a.*, 
-                (SELECT COUNT(*) FROM payments p WHERE p.application_id = a.id) as total_payments,
-                (SELECT COUNT(*) FROM payments p WHERE p.application_id = a.id AND p.status = 'PAID') as paid_payments,
-                (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.application_id = a.id AND p.status = 'PAID') as total_volume
-            FROM applications a
-            ORDER BY a.created_at DESC
-        `);
-        return res.rows;
+        const res = await db.query(`SELECT * FROM applications ORDER BY created_at DESC`);
+        const apps = res.rows || [];
+        for (const app of apps) {
+            const credsRes = await db.query(`
+                SELECT id, application_id, name, key_type, api_key_prefix, permissions, is_active, last_used_at, created_at
+                FROM api_credentials
+                WHERE application_id = $1
+                ORDER BY created_at DESC
+            `, [app.id]);
+            app.credentials = credsRes.rows || [];
+            app.total_payments = 0;
+            app.paid_payments = 0;
+            app.total_volume = 0;
+        }
+        return apps;
     }
 
     /**
