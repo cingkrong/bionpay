@@ -8,6 +8,14 @@ require('dotenv').config();
 const QRCode = require('qrcode');
 const sessionManager = require('./sessionManager');
 const shopeeManager = require('./shopeeManager');
+const db = require('./database/db');
+const v1Router = require('./routes/v1');
+const applicationsRouter = require('./routes/applications');
+const checkoutRouter = require('./routes/checkout');
+const legacyAdapterRouter = require('./routes/legacyAdapter');
+const reconciliationService = require('./services/reconciliationService');
+const applicationService = require('./services/applicationService');
+const { requireAdmin } = require('./middleware/auth');
 
 // Helper pembaca dinamis konfigurasi .env agar selalu sinkron tanpa perlu restart server
 function getStaticQRIS(provider = 'GOPAY') {
@@ -89,7 +97,7 @@ function getEnvConfig() {
 const PORT = process.env.PORT || 3000;
 const MAX_LOGS = 100;
 const CLAIMED_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 jam
-const QRIS_EXPIRY_MS = 5 * 60 * 1000; // 5 menit
+const QRIS_EXPIRY_MS = 15 * 60 * 1000; // 15 menit (standar EMVCo & README)
 const GOJEK_TRANSACTIONS_URL = 'https://api.gojekapi.com/merchant-analytics/v2/merchants/transactions';
 const CACHE_FILE = path.join(__dirname, '.gopay_cache.json');
 const STORE_FILE = path.join(__dirname, '.gateway_store.json');
@@ -311,6 +319,10 @@ async function autoMatchPendingQris() {
     } catch (e) {
         // Silently continue
     }
+
+    try {
+        await reconciliationService.matchPendingPayments();
+    } catch (e) {}
 }
 setInterval(autoMatchPendingQris, 10000); // Otomatis periksa setiap 10 detik
 
@@ -478,6 +490,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Inisialisasi Database Transaksional & Migrasi
+db.initDb().catch(err => console.error('Database initialization error:', err.message));
+
+// Public API Documentation & OpenAPI Specification
+app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'views', 'swagger.html')));
+app.get('/api/openapi.json', (req, res) => res.sendFile(path.join(__dirname, 'docs', 'openapi.json')));
+app.get('/openapi.json', (req, res) => res.sendFile(path.join(__dirname, 'docs', 'openapi.json')));
+
+// Mount REST API V1 & Platform Hub Routers
+app.use('/v1', v1Router);
+app.use('/api', applicationsRouter);
+app.use(checkoutRouter);
+app.use(legacyAdapterRouter);
 
 // Inisialisasi data persistensi
 loadStore();
@@ -799,6 +825,8 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const mutationSettledVolume = settledMutations.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
     const mutationSettledCount = settledMutations.length;
 
+    const shopeeStatus = shopeeManager.getShopeeStatus();
+
     res.json({
         success: true,
         stats: {
@@ -812,7 +840,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
             gopay_session_status: hasSession ? 'AUTHENTICATED' : 'NOT_CONFIGURED',
             shopee_session_status: hasShopee ? (shopeeManager.isTokenValid() ? 'AUTHENTICATED' : 'INVALID') : 'NOT_CONFIGURED',
             shopee_configured: hasShopee,
-            shopee_merchant_name: shopeeManager.getShopeeStatus().merchant_name || 'Bion Digital',
+            shopee_merchant_name: shopeeStatus.merchant_name || 'Bion Digital',
             uptime: Math.floor(process.uptime()),
             sandbox_mode: cfg.sandbox,
             port: PORT,
@@ -824,6 +852,17 @@ app.get('/api/dashboard/stats', async (req, res) => {
                 min: cfg.uniqueCodeMin,
                 max: cfg.uniqueCodeMax,
                 type: cfg.uniqueCodeType
+            },
+            gopay: {
+                authenticated: hasSession,
+                merchant_name: merchantInfo.name
+            },
+            shopee: {
+                valid: hasShopee && shopeeManager.isTokenValid(),
+                configured: hasShopee,
+                merchant_name: shopeeStatus.merchant_name || 'Bion Digital',
+                expiry: shopeeStatus.expiry || null,
+                last_checked: shopeeStatus.last_checked || null
             }
         },
         recent_qris: allQris.slice(0, 50),
@@ -832,10 +871,9 @@ app.get('/api/dashboard/stats', async (req, res) => {
     });
 });
 
-// Endpoint Manual Trigger Sinkronisasi Mutasi (GoBiz + ShopeePay)
-app.post('/api/sync-mutations', async (req, res) => {
+// Endpoint Manual Trigger Sinkronisasi Mutasi (GoBiz + ShopeePay) - Memerlukan Admin
+app.post('/api/sync-mutations', requireAdmin, async (req, res) => {
     try {
-        await autoMatchPendingQris();
         let mutations = await getLiveGoBizMutations(true, req.query.days || req.body?.days || 1);
         mutations = mutations.map(m => ({ ...m, provider: 'GOPAY' }));
 
@@ -846,6 +884,23 @@ app.post('/api/sync-mutations', async (req, res) => {
                 mutations.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
             } catch (e) {}
         }
+
+        // Ingest into persistent reconciliation engine
+        for (const m of mutations) {
+            await reconciliationService.ingestProviderTransaction({
+                provider: m.provider || 'GOPAY',
+                provider_transaction_id: m.transaction_id || m.id,
+                provider_order_id: m.order_id || null,
+                amount: m.amount,
+                payer_issuer: m.issuer || m.payer_issuer,
+                payment_type: m.channel || m.payment_type || 'QRIS',
+                transaction_time: m.time,
+                raw_payload: m
+            });
+        }
+
+        await autoMatchPendingQris();
+        await reconciliationService.matchPendingPayments();
 
         res.json({
             success: true,
@@ -858,14 +913,8 @@ app.post('/api/sync-mutations', async (req, res) => {
     }
 });
 
-// Endpoint untuk mengosongkan seluruh riwayat sesi gateway
-app.post('/api/clear-history', (req, res) => {
-    const apiKey = req.headers['x-api-key'] || req.query.api_key || req.query.apikey || req.body?.api_key;
-    const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.includes('127.0.0.1');
-    if (!isLocal && (!apiKey || apiKey !== process.env.API_KEY)) {
-        return res.status(401).json({ success: false, message: 'Autentikasi Gagal' });
-    }
-
+// Endpoint untuk mengosongkan seluruh riwayat sesi gateway (Memerlukan Admin)
+app.post('/api/clear-history', requireAdmin, (req, res) => {
     qrisStore.clear();
     claimedTransactions.clear();
     saveStore();
@@ -873,8 +922,8 @@ app.post('/api/clear-history', (req, res) => {
     res.json({ success: true, message: 'Seluruh riwayat sesi gateway berhasil dikosongkan (0 transaksi)' });
 });
 
-// Endpoint Manual Match: Pasangkan Mutasi GoBiz ke Sesi QRIS
-app.post('/api/claim-mutation', async (req, res) => {
+// Endpoint Manual Match: Pasangkan Mutasi GoBiz ke Sesi QRIS (Memerlukan Admin & Verifikasi Nominal Ketat)
+app.post('/api/claim-mutation', requireAdmin, async (req, res) => {
     const qrisId = req.body?.qris_id;
     const txId = req.body?.transaction_id;
 
@@ -895,6 +944,22 @@ app.post('/api/claim-mutation', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Transaksi GoBiz tidak ditemukan' });
         }
 
+        // STRICT AMOUNT VERIFICATION: Nominal mutasi HARUS sama persis dengan nominal tagihan
+        if (parseInt(targetTx.amount, 10) !== parseInt(qris.amount, 10)) {
+            return res.status(400).json({
+                success: false,
+                message: `Nominal tidak cocok: Transaksi GoBiz bernilai Rp ${targetTx.amount}, sedangkan tagihan QRIS bernilai Rp ${qris.amount}`
+            });
+        }
+
+        // Anti double-claim verification
+        if (claimedTransactions.has(targetTx.id)) {
+            return res.status(409).json({
+                success: false,
+                message: 'Transaksi ini sudah pernah diklaim oleh sesi pembayaran lain'
+            });
+        }
+
         const txObj = {
             transaction_id: targetTx.id,
             order_id: targetTx.order_id,
@@ -910,6 +975,18 @@ app.post('/api/claim-mutation', async (req, res) => {
         qrisStore.set(qrisId, qris);
         claimedTransactions.set(targetTx.id, { qrisId: qris.trxId || qrisId, claimedAt: Date.now() });
         saveStore();
+
+        // Also ingest and claim in persistent reconciliation engine
+        await reconciliationService.ingestProviderTransaction({
+            provider: 'GOPAY',
+            provider_transaction_id: targetTx.id,
+            provider_order_id: targetTx.order_id,
+            amount: targetTx.amount,
+            payer_issuer: targetTx.issuer,
+            payment_type: targetTx.channel,
+            transaction_time: targetTx.time,
+            raw_payload: targetTx
+        });
 
         logActivity('SUCCESS', `Manual Klaim: Mutasi GoBiz ${targetTx.id} (Rp ${targetTx.amount} via ${targetTx.issuer}) berhasil dipasangkan ke QRIS ${qrisId}`);
         dispatchWebhook(qris, txObj);
@@ -1238,8 +1315,15 @@ app.get('/api/qr-status/:id', async (req, res) => {
     return res.json({ success: true, paid: false, status: 'PENDING', message: 'Belum ada pembayaran masuk' });
 });
 
-// Endpoint Simulasi Pembayaran (Sandbox Mode)
-app.post('/api/simulate-payment', (req, res) => {
+// Endpoint Simulasi Pembayaran (Hanya Sandbox Mode & Memerlukan Admin)
+app.post('/api/simulate-payment', requireAdmin, (req, res) => {
+    if (process.env.SANDBOX_MODE !== 'true') {
+        return res.status(403).json({
+            success: false,
+            message: 'Akses Ditolak: Simulasi pembayaran hanya diizinkan ketika SANDBOX_MODE=true pada environment server'
+        });
+    }
+
     const qrisId = req.body?.qris_id || req.query?.qris_id;
     const trxId = req.body?.trx_id || req.query?.trx_id;
 
@@ -1573,7 +1657,7 @@ async function verifyPayment(amount, startTime, merchantIdOverride = null, userA
             const isWithinWindow = (txTimestamp >= filterStartTimeMs) && (txTimestamp <= Date.now() + 60000);
             const existingClaim = claimedTransactions.get(txId);
 
-            if (isWithinWindow && !existingClaim) {
+            if (txAmount === targetAmount && isWithinWindow && !existingClaim) {
                 // Pastikan tidak ada sesi pending lain yang nominalnya cocok persis dengan txAmount
                 let isExactForOther = false;
                 for (const [otherId, otherQ] of qrisStore.entries()) {
@@ -1753,6 +1837,99 @@ app.get(['/shopee/transactions/all', '/api/shopee/transactions/all'], apiKeyAuth
     }
 });
 
+// ── Helper Penyimpanan Berkas Lingkungan (.env) ─────────────────────────────────
+function saveEnvFile(newConfig) {
+    const envPath = path.join(__dirname, '.env');
+    let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : '';
+
+    const keyMap = {
+        port: 'PORT',
+        api_key: 'API_KEY',
+        sandbox_mode: 'SANDBOX_MODE',
+        qris_static: 'QRIS_STATIC',
+        gopay_merchant_name: 'GOPAY_MERCHANT_NAME',
+        gopay_merchant_city: 'GOPAY_MERCHANT_CITY',
+        gopay_merchant_id: 'GOPAY_MERCHANT_ID',
+        shopee_token: 'SHOPEE_TOKEN',
+        shopee_qris_static: 'SHOPEE_QRIS_STATIC',
+        telegram_bot_token: 'TELEGRAM_BOT_TOKEN',
+        telegram_chat_id: 'TELEGRAM_CHAT_ID'
+    };
+
+    for (const [prop, envKey] of Object.entries(keyMap)) {
+        if (newConfig[prop] !== undefined) {
+            const val = String(newConfig[prop]).trim();
+            const regex = new RegExp(`^${envKey}=.*$`, 'm');
+            if (regex.test(content)) {
+                content = content.replace(regex, `${envKey}=${val}`);
+            } else {
+                content += (content.endsWith('\n') || content.length === 0 ? '' : '\n') + `${envKey}=${val}\n`;
+            }
+            process.env[envKey] = val;
+        }
+    }
+
+    fs.writeFileSync(envPath, content, 'utf-8');
+    if (newConfig.shopee_token !== undefined) {
+        shopeeManager.updateShopeeToken(newConfig.shopee_token);
+    }
+    return true;
+}
+
+// Endpoint Konfigurasi Lingkungan (.env)
+app.get('/api/env-config', (req, res) => {
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
+    const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.includes('127.0.0.1');
+    if (!isLocal && (!apiKey || apiKey !== process.env.API_KEY)) {
+        return res.status(401).json({ success: false, message: 'Autentikasi Gagal' });
+    }
+
+    const cfg = getEnvConfig();
+    const envPath = path.join(__dirname, '.env');
+
+    res.json({
+        success: true,
+        data: {
+            port: process.env.PORT || 3000,
+            api_key: process.env.API_KEY || '',
+            sandbox_mode: process.env.SANDBOX_MODE === 'true',
+            qris_static: cfg.qrisStatic || '',
+            gopay_merchant_name: cfg.merchantName || '',
+            gopay_merchant_city: cfg.merchantCity || '',
+            gopay_merchant_id: cfg.merchantId || '',
+            shopee_token: cfg.shopeeToken || '',
+            shopee_qris_static: cfg.shopeeQrisStatic || '',
+            telegram_bot_token: cfg.telegramBotToken || '',
+            telegram_chat_id: cfg.telegramChatId || '',
+            env_path: envPath
+        }
+    });
+});
+
+app.post('/api/save-env', (req, res) => {
+    const apiKey = req.headers['x-api-key'] || req.query.api_key || req.body?.api_key;
+    const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.includes('127.0.0.1');
+    if (!isLocal && (!apiKey || apiKey !== process.env.API_KEY)) {
+        return res.status(401).json({ success: false, message: 'Autentikasi Gagal' });
+    }
+
+    try {
+        const body = req.body || {};
+        saveEnvFile(body);
+        logActivity('INFO', 'Konfigurasi .env diperbarui melalui Editor Lingkungan Web');
+        return res.json({
+            success: true,
+            message: 'Konfigurasi .env berhasil disimpan dan diterapkan langsung ke gateway!'
+        });
+    } catch (err) {
+        logActivity('ERROR', 'Gagal menyimpan konfigurasi .env: ' + err.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Gagal menyimpan konfigurasi: ' + err.message
+        });
+    }
+});
+
 // Logs Endpoint
 app.get('/api/logs', apiKeyAuth, (req, res) => {
     res.json({ success: true, logs: activityLogs });
@@ -1775,10 +1952,18 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    shopeeManager.startTokenChecker();
-    logActivity('SYSTEM', `BionPay Unified Gateway berjalan pada port ${PORT}`);
-    logActivity('SYSTEM', `Developer & Merchant Dashboard: http://localhost:${PORT}/`);
-    logActivity('SYSTEM', `Providers: GoPay (GoBiz) + ShopeePay Partner`);
-    logActivity('SYSTEM', `Mode: ${process.env.SANDBOX_MODE === 'true' ? 'SANDBOX (Pengujian Lokal Aktif)' : 'PRODUCTION'}`);
-});
+if (require.main === module) {
+    app.listen(PORT, async () => {
+        await db.initDb().catch(err => console.warn('DB startup warning:', err.message));
+        shopeeManager.startTokenChecker();
+        logActivity('SYSTEM', `BionPay Unified Gateway berjalan pada port ${PORT}`);
+        logActivity('SYSTEM', `Developer & Merchant Dashboard: http://localhost:${PORT}/`);
+        logActivity('SYSTEM', `REST API V1 Telemetry: http://localhost:${PORT}/v1/health`);
+        logActivity('SYSTEM', `Interactive API Docs: http://localhost:${PORT}/docs`);
+        logActivity('SYSTEM', `Providers: GoPay (GoBiz) + ShopeePay Partner`);
+        logActivity('SYSTEM', `Mode: ${process.env.SANDBOX_MODE === 'true' ? 'SANDBOX (Pengujian Lokal Aktif)' : 'PRODUCTION'}`);
+    });
+}
+
+module.exports = app;
+

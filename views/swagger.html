@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BionPay V1 API Documentation & Interactive Console</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #09090b;
+            --bg-surface: #121215;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-primary: #f4f4f5;
+            --accent: #10b981;
+        }
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .topbar {
+            background: #111115;
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar-brand {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .topbar-badge {
+            font-size: 0.6875rem;
+            padding: 2px 8px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+        .topbar-links a {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.8125rem;
+            margin-left: 16px;
+            transition: color 140ms ease;
+        }
+        .topbar-links a:hover {
+            color: #ffffff;
+        }
+        /* Custom dark theme overrides for Swagger */
+        .swagger-ui {
+            filter: invert(88%) hue-rotate(180deg);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .swagger-ui .topbar { display: none; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <span>BionPay Unified Gateway</span>
+            <span class="topbar-badge">REST API V1</span>
+        </div>
+        <div class="topbar-links">
+            <a href="/">Dashboard</a>
+            <a href="/docs/api_guide.md" target="_blank">SDK & Webhook Guide</a>
+            <a href="/v1/health" target="_blank">Health Telemetry</a>
+        </div>
+    </header>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script>
+        window.onload = function() {
+            SwaggerUIBundle({
+                url: "/api/openapi.json",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                layout: "BaseLayout"
+            });
+        };
+    </script>
+</body>
+</html>

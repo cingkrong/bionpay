@@ -1,16 +1,17 @@
 # BionPay Unified Gateway
 
 <p align="center">
-  <img src="https://img.shields.io/badge/BionPay-v1.1.0-00AED9?style=for-the-badge&logoColor=white" alt="BionPay Version" />
+  <img src="https://img.shields.io/badge/BionPay-v2.0.0--Hub-00AED9?style=for-the-badge&logoColor=white" alt="BionPay Version" />
   <img src="https://img.shields.io/badge/Node.js-18.x%20%7C%2020.x%20%7C%2022.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Dual_Provider-GoPay_%2B_ShopeePay-EE4D2D?style=for-the-badge" alt="Dual Provider" />
   <img src="https://img.shields.io/badge/QRIS-EMVCo%20Dynamic-10B981?style=for-the-badge" alt="EMVCo Dynamic QRIS" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL%20%2B%20ACID-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
 </p>
 
 <p align="center">
-  <strong>Self-Hosted Dual-Provider (GoPay/GoBiz + ShopeePay Partner) Payment Gateway, Real-Time Settlement Engine & Dynamic QRIS Platform.</strong><br>
-  Otomatisasi penerimaan pembayaran QRIS langsung ke akun toko GoBiz & ShopeePay tanpa biaya transaksi pihak ketiga (0% fee).
+  <strong>Multi-Application Payment Integration Hub & Unified Payment Gateway.</strong><br>
+  Platform integrasi pembayaran mandiri (self-hosted) untuk menghubungkan berbagai website dan aplikasi eksternal ke gateway QRIS dinamis GoPay & ShopeePay dengan REST API v1 terstandar, signed webhook HMAC-SHA256, hosted checkout responsif, dan engine rekonsiliasi transaksional.
 </p>
 
 ---
@@ -53,6 +54,16 @@ BionPay membaca template QRIS statis outlet Anda, lalu secara komputasi lokal me
 
 ## ✨ Fitur Utama
 
+### 🌟 Platform Hub & Multi-Website (v2.0 Upgrade)
+- 🌐 **Multi-Application Tenant Hub:** Daftarkan banyak website dan platform eksternal ke satu server BionPay dengan isolasi data penuh berdasarkan `application_id`.
+- 🔐 **Scoped API Credentials:** Generate API Key live (`bp_live_...`) dan sandbox (`bp_test_...`) per website dengan permission scope granular (`payments:read`, `payments:write`, `admin`) dan fitur rotasi/revokasi instan.
+- 🚀 **REST API V1 Terstandar:** Endpoint pembayaran modern (`POST /v1/payments`, `GET /v1/payments/:id`, `POST /v1/payments/:id/cancel`, `GET /v1/health`) dengan format respon seragam, error code terstandar, dan dukungan wajib header `Idempotency-Key`.
+- 🔏 **Enterprise Signed Webhook Engine:** Signing secret unik per aplikasi (`whsec_...`), tanda tangan HMAC-SHA256 (`X-BionPay-Signature`), authenticated timestamp, event ID, antrean retry eksponensial (5x backoff), replay attack protection, dan SSRF guard.
+- 🎨 **Hosted Checkout Responsif:** Halaman bayar interaktif (`/checkout/:id`) berpenampilan modern (monochrome anti-slop) dengan branding logo dan nama aplikasi toko, timer countdown, dynamic QRIS, dan proteksi secret di frontend.
+- ⚖️ **Engine Rekonsiliasi & Ambiguity Guard:** Transaksional ACID (PostgreSQL + persistent engine), proteksi double-claim unik, penanganan transaksi identik dengan status `REVIEW_REQUIRED`, dan panel review manual operator.
+- 📖 **OpenAPI 3.0 & Interactive Swagger UI:** Akses spesifikasi lengkap di [`/docs`](http://localhost:3000/docs) serta panduan integrasi praktis di [`docs/api_guide.md`](docs/api_guide.md) untuk Next.js, Laravel/PHP, dan WooCommerce.
+
+### ⚡ Fitur Inti Gateway
 - ⚡ **Dual-Provider EMVCo Engine:** Buat QRIS Dinamis menggunakan template GoPay atau ShopeePay dengan parser Tag-Length-Value (TLV) presisi tinggi dan verifikasi checksum CRC16.
 - 🔄 **Unified Settlement Auto-Matcher:** Background worker memeriksa transaksi pending setiap 10 detik ke GoBiz dan ShopeePay secara otomatis tanpa perlu campur tangan manual.
 - 🛡️ **Anti Double-Claim Scope (`trx_id`):** Setiap transaksi memiliki scope ID unik sehingga jika terdapat dua pembeli dengan nominal yang sama dalam waktu berdekatan, transaksi tidak akan tertukar atau saling klaim.
@@ -61,13 +72,13 @@ BionPay membaca template QRIS statis outlet Anda, lalu secara komputasi lokal me
   - Generator QRIS dengan pemilih provider (`AUTO`, `GOPAY`, `SHOPEEPAY`).
   - Pratinjau QR interaktif & simulasi bayar pengujian.
   - Tabel mutasi masuk real-time dengan badge provider.
+  - Tab manajemen Integrasi & Website Hub.
+  - Tab Audit & Rekonsiliasi Settlement Unmatched.
   - Tab manajemen token ShopeePay langsung dari UI.
   - API Playground console & Live activity logs.
-- 📱 **Interactive Checkout Pages:** Halaman pembayaran siap pakai (`/qr/:id`) dengan hitung mundur otomatis, indikator bank/e-wallet, tombol cek manual anti-spam, dan integrasi deep link.
 - 🔑 **Set-and-Forget GoBiz Auth:** Autentikasi terminal satu kali via SMS/WA (`node login.js`). Sistem secara otomatis memperbarui (*auto-refresh*) access token setiap 6 jam di background.
 - 🛒 **ShopeePay Partner Integration:** Dukungan token partner web ShopeePay dengan endpoint update token instan (`POST /update-token`), cek status validitas, dan rotasi User-Agent.
 - 📲 **Telegram Alert Webhook:** Notifikasi otomatis ke Telegram saat token ShopeePay kadaluarsa atau mendekati masa aktif habis.
-- 🔔 **Signed Webhook Dispatch:** Mengirimkan payload JSON yang di-hash dengan HMAC-SHA256 (`X-Gateway-Signature`) ke endpoint callback toko Anda saat pembayaran lunas.
 - 🧪 **Sandbox Simulation Mode:** Dilengkapi mode pengujian lokal (`SANDBOX_MODE=true`) untuk menguji integrasi frontend/backend tanpa menggunakan uang riil.
 
 ---

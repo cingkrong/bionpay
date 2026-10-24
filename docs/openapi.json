@@ -1,0 +1,174 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "BionPay Unified Payment Integration API",
+    "version": "1.0.0",
+    "description": "Dokumentasi Resmi BionPay Multi-Application Payment Hub & REST API V1 untuk integrasi website dan aplikasi eksternal via dynamic QRIS (GoPay & ShopeePay) dan HMAC-SHA256 signed webhooks."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/v1",
+      "description": "Local Development / Live Gateway Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "pay_9f42a1b9c8d7" },
+          "uuid": { "type": "string", "example": "3b29c011-82d4-47b2-84dc-6cb1693081e2" },
+          "order_id": { "type": "string", "example": "INV-2026-001" },
+          "amount": { "type": "integer", "example": 50000 },
+          "currency": { "type": "string", "example": "IDR" },
+          "status": { "type": "string", "enum": ["CREATED", "PENDING", "PAID", "EXPIRED", "FAILED", "CANCELLED", "REVIEW_REQUIRED"], "example": "PENDING" },
+          "provider": { "type": "string", "enum": ["GOPAY", "SHOPEEPAY", "AUTO"], "example": "AUTO" },
+          "qris_code": { "type": "string", "example": "00020101021226600014COM.GO-JEK.WWW..." },
+          "qris_image_url": { "type": "string", "example": "http://localhost:3000/qr/pay_9f42a1b9c8d7/image.png" },
+          "checkout_url": { "type": "string", "example": "http://localhost:3000/checkout/pay_9f42a1b9c8d7" },
+          "expires_at": { "type": "string", "format": "date-time", "example": "2026-10-24T09:15:00.000Z" }
+        }
+      },
+      "CreatePaymentRequest": {
+        "type": "object",
+        "required": ["order_id", "amount"],
+        "properties": {
+          "order_id": { "type": "string", "example": "INV-2026-001" },
+          "amount": { "type": "integer", "minimum": 1, "maximum": 100000000, "example": 50000 },
+          "customer_name": { "type": "string", "example": "Ahmad Dani" },
+          "customer_email": { "type": "string", "format": "email", "example": "ahmad@gmail.com" },
+          "customer_phone": { "type": "string", "example": "081234567890" },
+          "description": { "type": "string", "example": "Pembayaran Langganan Pro" },
+          "callback_url": { "type": "string", "format": "uri", "example": "https://toko-anda.com/api/webhooks/bionpay" },
+          "return_url": { "type": "string", "format": "uri", "example": "https://toko-anda.com/payment/success" },
+          "provider": { "type": "string", "enum": ["GOPAY", "SHOPEEPAY", "AUTO"], "example": "AUTO" },
+          "expires_in_minutes": { "type": "integer", "minimum": 1, "maximum": 1440, "example": 15 },
+          "metadata": { "type": "object", "example": { "user_id": 992, "product_id": "SKU-99" } }
+        }
+      }
+    }
+  },
+  "security": [
+    { "ApiKeyAuth": [] }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Gateway Health Check",
+        "responses": {
+          "200": { "description": "Layanan gateway berjalan normal" }
+        }
+      }
+    },
+    "/payments": {
+      "post": {
+        "summary": "Buat Pembayaran QRIS Dinamis Baru",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "schema": { "type": "string" },
+            "required": false,
+            "description": "Kunci idempotensi untuk mencegah duplikasi pembuatan tagihan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePaymentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pembayaran berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/Payment" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validasi input gagal" },
+          "409": { "description": "Konflik order_id atau idempotency key" }
+        }
+      },
+      "get": {
+        "summary": "Daftar Riwayat Pembayaran",
+        "parameters": [
+          { "in": "query", "name": "status", "schema": { "type": "string" }, "description": "Filter status pembayaran" },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 20 } },
+          { "in": "query", "name": "offset", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar pembayaran berhasil diambil" }
+        }
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "summary": "Ambil Detail Pembayaran",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" }, "description": "ID pembayaran atau UUID" }
+        ],
+        "responses": {
+          "200": { "description": "Data pembayaran ditemukan" },
+          "404": { "description": "Pembayaran tidak ditemukan" }
+        }
+      }
+    },
+    "/payments/{id}/cancel": {
+      "post": {
+        "summary": "Batalkan Sesi Pembayaran",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Pembayaran berhasil dibatalkan" },
+          "400": { "description": "Pembayaran sudah berstatus PAID tidak dapat dibatalkan" }
+        }
+      }
+    },
+    "/payment-links": {
+      "post": {
+        "summary": "Buat Tautan Pembayaran Langsung (Payment Link)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePaymentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Payment link berhasil dibuat" }
+        }
+      }
+    },
+    "/webhook-events": {
+      "get": {
+        "summary": "Daftar Event Webhook & Riwayat Pengiriman",
+        "responses": {
+          "200": { "description": "Daftar event webhook berhasil diambil" }
+        }
+      }
+    }
+  }
+}

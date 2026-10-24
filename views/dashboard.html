@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoPay Merchant Partner Gateway - Developer & Merchant Console</title>
+    <title>BionPay Unified Gateway - Developer & Merchant Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -274,32 +274,50 @@
             border-bottom: 1px solid var(--border-subtle);
             margin-bottom: 24px;
             overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs-bar::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-btn {
             background: transparent;
             border: none;
             color: var(--text-secondary);
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 500;
-            padding: 10px 16px;
+            padding: 9px 13px;
             cursor: pointer;
             border-bottom: 2px solid transparent;
-            transition: color 140ms ease-out, border-color 140ms ease-out;
+            transition: color 140ms cubic-bezier(0.23, 1, 0.32, 1), border-color 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 140ms ease-out;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             white-space: nowrap;
             font-family: inherit;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            user-select: none;
         }
 
         .tab-btn:hover {
             color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: -2px;
+        }
+
+        .tab-btn:active {
+            transform: scale(0.98);
         }
 
         .tab-btn.active {
-            color: var(--accent-primary);
-            border-bottom-color: var(--accent-primary);
+            color: #10b981;
+            border-bottom-color: #10b981;
             font-weight: 600;
         }
 
@@ -309,6 +327,279 @@
 
         .tab-content.active {
             display: block;
+        }
+
+        /* ── Anti-Slop Environment Editor Design ──────────────────────────── */
+        .env-editor-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 26px;
+        }
+
+        .env-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .env-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            padding: 3px 9px;
+            border-radius: 9999px;
+            margin-bottom: 8px;
+        }
+
+        .env-badge-tag span.dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #a855f7;
+            box-shadow: 0 0 6px rgba(168, 85, 247, 0.6);
+        }
+
+        .env-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        .env-subtitle {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .env-path-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+        }
+
+        .env-section-box {
+            background: #0b0e14;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 20px;
+            transition: border-color 140ms ease-out;
+        }
+
+        .env-section-box:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .env-section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .env-section-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .env-section-icon.cyan {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .env-section-icon.blue {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        .env-section-icon.orange {
+            background: rgba(238, 77, 45, 0.12);
+            color: #ee4d2d;
+            border: 1px solid rgba(238, 77, 45, 0.25);
+        }
+
+        .env-section-icon.telegram {
+            background: rgba(34, 158, 217, 0.12);
+            color: #229ed9;
+            border: 1px solid rgba(34, 158, 217, 0.25);
+        }
+
+        .env-section-title-text {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .env-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .env-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .env-form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+        }
+
+        .env-form-input {
+            width: 100%;
+            background: #06080e;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 10px 14px;
+            font-size: 0.8125rem;
+            line-height: 1.4;
+            transition: border-color 140ms ease-out, box-shadow 140ms ease-out, background-color 140ms ease-out;
+            font-family: inherit;
+        }
+
+        .env-form-input:hover:not(:disabled) {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .env-form-input:focus, .env-form-input:focus-visible {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+            background: #090c14;
+        }
+
+        select.env-form-input, select.form-input {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        .env-form-input-mono {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .env-textarea {
+            resize: vertical;
+            min-height: 64px;
+            line-height: 1.5;
+            word-break: break-all;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+        }
+
+        .env-textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .env-textarea::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 9999px;
+        }
+
+        .env-help-text {
+            font-size: 0.6875rem;
+            color: #8b949e;
+            margin-top: 6px;
+            display: block;
+            line-height: 1.45;
+        }
+
+        .btn-restart-gateway {
+            background: #10b981;
+            color: #022c18;
+            font-weight: 700;
+            font-size: 0.8125rem;
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 60ms ease-out, box-shadow 140ms ease-out;
+        }
+
+        .btn-restart-gateway:hover:not(:disabled) {
+            background: #34d399;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.32);
+        }
+
+        .btn-restart-gateway:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-restart-gateway:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        .btn-restart-gateway:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .env-bottom-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         /* Grid Section (Overview) */
@@ -461,6 +752,25 @@
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             background: var(--bg-surface);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.28);
         }
 
         table {
@@ -743,28 +1053,40 @@
         <!-- Navigation Tabs -->
         <nav class="tabs-bar">
             <button class="tab-btn active" onclick="switchTab('overview')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                <span>Ringkasan & Generator</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Generator QRIS Dinamis</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('applications')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <span>Integrasi & Website Hub</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('reconciliation')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span>Audit & Rekonsiliasi</span>
             </button>
             <button class="tab-btn" onclick="switchTab('explorer')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>Daftar QRIS & Mutasi</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                <span>Mutasi & Settlement</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('env-config')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+                <span>Konfigurasi Lingkungan (.env)</span>
             </button>
             <button class="tab-btn" onclick="switchTab('shopee')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>ShopeePay Partner</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5-3 3 1.5 1.5-4 4a2.828 2.828 0 1 1-4-4l4-4 1.5 1.5 3-3-1.5-1.5 3.5-3.5a2.121 2.121 0 0 1 3 3z"></path></svg>
+                <span>Panduan Pairing & Token</span>
             </button>
             <button class="tab-btn" onclick="switchTab('playground')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                <span>API Console Playground</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                <span>API & Webhook</span>
             </button>
             <button class="tab-btn" onclick="switchTab('logs')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                 <span>Live Activity Logs</span>
             </button>
             <button class="tab-btn" onclick="switchTab('docs')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <span>Dokumentasi & Integrasi</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>Dokumentasi</span>
             </button>
         </nav>
 
@@ -856,6 +1178,174 @@
                 </div>
             </div>
         </section>
+
+        <!-- TAB: INTEGRASI & WEBSITE HUB (APPLICATION MANAGER) -->
+        <section id="tab-applications" class="tab-content">
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                            <span>Multi-Application Payment Integration Hub</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Kelola website eksternal dan aplikasi yang terhubung ke gateway via REST API V1, Webhook bertanda tangan HMAC, dan Hosted Checkout
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="loadApplications()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="toggleNewAppCard()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Daftarkan Website Baru</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Aplikasi Baru (Collapsible) -->
+                <div id="card-new-app" style="display: none; padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface-elevated);">
+                    <div style="font-size: 0.875rem; font-weight: 700; margin-bottom: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        Registrasi Website / Aplikasi Klien Baru
+                    </div>
+                    <form onsubmit="submitCreateApp(event)">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Nama Aplikasi / Website *</label>
+                                <input type="text" id="new-app-name" class="form-input" placeholder="contoh: Toko Online Bion Store" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">URL Website Domain * (HTTPS disarankan)</label>
+                                <input type="url" id="new-app-website" class="form-input form-input-mono" placeholder="https://tokobion.com" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Webhook Callback URL (Opsional)</label>
+                                <input type="url" id="new-app-webhook" class="form-input form-input-mono" placeholder="https://tokobion.com/api/payment-webhook">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Preferensi Provider Payment</label>
+                                <select id="new-app-provider" class="form-input">
+                                    <option value="AUTO" selected>AUTO (GoPay Priority, Fallback ShopeePay)</option>
+                                    <option value="GOPAY">GOPAY Only (GoBiz Partner)</option>
+                                    <option value="SHOPEEPAY">SHOPEEPAY Only (Shopee Partner)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label">Deskripsi / Catatan Integrasi</label>
+                            <input type="text" id="new-app-desc" class="form-input" placeholder="Integrasi checkout e-commerce WooCommerce / Laravel">
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewAppCard()">Batal</button>
+                            <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-new-app">
+                                <span>Daftarkan & Generate API Keys</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Container Daftar Aplikasi Terdaftar -->
+                <div id="applications-list-container" style="padding: 24px; display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <div style="text-align: center; color: var(--text-muted); padding: 40px;">
+                        Memuat data aplikasi terintegrasi...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: AUDIT & REKONSILIASI SETTLEMENT -->
+        <section id="tab-reconciliation" class="tab-content">
+            <!-- TABEL TRANSAKSI PROVIDER BELUM TERALOKASI -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <span>Unmatched Settlement Transaksi Provider</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Daftar mutasi settlement masuk dari GoBiz / ShopeePay yang belum diklaim oleh sesi pembayaran tagihan mana pun
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="loadReconciliation()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        <span>Refresh Rekonsiliasi</span>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu Mutasi</th>
+                                <th>Provider</th>
+                                <th>Transaction ID</th>
+                                <th>Order Ref</th>
+                                <th>Nominal</th>
+                                <th>Payer / Issuer</th>
+                                <th>Status Alokasi</th>
+                                <th>Aksi Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-unmatched-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat data mutasi settlement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABEL PEMBAYARAN MEMERLUKAN TINJAUAN MANUAL (REVIEW_REQUIRED) -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Pembayaran Memerlukan Review (REVIEW_REQUIRED)</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            Transaksi yang ditahan karena benturan nominal identik atau pembayaran terlambat untuk mencegah false-positive payment.success
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu Sesi</th>
+                                <th>Aplikasi Klien</th>
+                                <th>Payment ID</th>
+                                <th>Order ID</th>
+                                <th>Nominal</th>
+                                <th>Status Saat Ini</th>
+                                <th>Catatan Review</th>
+                                <th>Tindakan Rekonsiliasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-review-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">Memuat status review...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal Dialog Universal -->
+        <div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#10141e; border:1px solid rgba(255,255,255,0.14); border-radius:14px; width:90%; max-width:580px; max-height:85vh; overflow-y:auto; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.7);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <div id="modal-title" style="font-weight:700; font-size:1rem; color:var(--text-primary);">Judul Modal</div>
+                    <button onclick="closeModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1.25rem;">&times;</button>
+                </div>
+                <div id="modal-body" style="font-size:0.875rem; color:var(--text-secondary); line-height:1.6;">
+                    Konten modal...
+                </div>
+            </div>
+        </div>
 
         <!-- TAB 2: EXPLORER DAFTAR QRIS & MUTASI -->
         <section id="tab-explorer" class="tab-content">
@@ -957,6 +1447,155 @@
             </div>
         </section>
 
+        <!-- TAB 3: KONFIGURASI LINGKUNGAN (.ENV) -->
+        <section id="tab-env-config" class="tab-content">
+            <div class="env-editor-card">
+                <!-- Header Card -->
+                <div class="env-header-row">
+                    <div>
+                        <div class="env-badge-tag">
+                            <span class="dot"></span>
+                            <span>EDITOR BERKAS LINGKUNGAN</span>
+                        </div>
+                        <h2 class="env-title">Konfigurasi .env BionPay Gateway</h2>
+                        <div class="env-subtitle">
+                            Path: <span class="env-path-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> <span id="lbl-env-path">.env</span></span> • Perubahan akan otomatis tersimpan dan diterapkan langsung ke sistem gateway.
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-restart-gateway" id="btn-save-env" onclick="handleSaveEnvConfig()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            <span>Simpan & Restart Gateway</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="form-env-config" onsubmit="handleSaveEnvConfig(event)">
+                    <!-- Bagian 1: Server & Keamanan -->
+                    <div class="env-section-box">
+                        <div class="env-section-header">
+                            <div class="env-section-icon cyan">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            </div>
+                            <span class="env-section-title-text">1. Pengaturan Server & Keamanan</span>
+                        </div>
+                        <div class="env-grid-3">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-port">PORT GATEWAY</label>
+                                <input type="number" id="cfg-port" class="env-form-input env-form-input-mono" placeholder="3000">
+                                <span class="env-help-text">Port internal Express HTTP (default: 3000)</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-api-key">API KEY OTORISASI</label>
+                                <input type="text" id="cfg-api-key" class="env-form-input env-form-input-mono" placeholder="gopay_dev_secret_2026">
+                                <span class="env-help-text">Kunci x-api-key untuk akses endpoint API</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-sandbox">SANDBOX_MODE</label>
+                                <select id="cfg-sandbox" class="env-form-input">
+                                    <option value="false">false (Mode Produksi — Uang Riil)</option>
+                                    <option value="true">true (Mode Sandbox — Pengujian)</option>
+                                </select>
+                                <span class="env-help-text">Ubah ke true saat ingin menguji tanpa transaksi nyata</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bagian 2: GoPay / GoBiz Merchant -->
+                    <div class="env-section-box">
+                        <div class="env-section-header">
+                            <div class="env-section-icon blue">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            </div>
+                            <span class="env-section-title-text">2. Provider 1: GoPay / GoBiz Merchant</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="env-form-label" for="cfg-qris-static">QRIS_STATIC (TEMPLATE STRING QRIS CETAK GOPAY) *</label>
+                            <textarea id="cfg-qris-static" class="env-form-input env-form-input-mono env-textarea" rows="3" placeholder="00020101021126600014COM.GO-JEK.WWW..."></textarea>
+                            <span class="env-help-text">String QRIS statis outlet Anda (format EMVCo diawali 000201...). Dapatkan dengan men-scan banner QRIS outlet GoPay Anda via aplikasi scanner.</span>
+                        </div>
+                        <div class="env-grid-3">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-gopay-name">GOPAY_MERCHANT_NAME</label>
+                                <input type="text" id="cfg-gopay-name" class="env-form-input" placeholder="Nama Toko Anda">
+                                <span class="env-help-text">Nama toko / merchant GoBiz</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-gopay-city">GOPAY_MERCHANT_CITY</label>
+                                <input type="text" id="cfg-gopay-city" class="env-form-input" placeholder="Kota Toko (misal: Jakarta)">
+                                <span class="env-help-text">Kota lokasi toko / outlet</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-gopay-id">GOPAY_MERCHANT_ID</label>
+                                <input type="text" id="cfg-gopay-id" class="env-form-input env-form-input-mono" placeholder="G676629960">
+                                <span class="env-help-text">ID Merchant GoBiz (opsional)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bagian 3: ShopeePay Partner Web -->
+                    <div class="env-section-box">
+                        <div class="env-section-header">
+                            <div class="env-section-icon orange">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <span class="env-section-title-text">3. Provider 2: ShopeePay Partner Web</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="env-form-label" for="cfg-shopee-token">SHOPEE_TOKEN (TOKEN MERCHANT WEB SHOPEEPAY) *</label>
+                            <textarea id="cfg-shopee-token" class="env-form-input env-form-input-mono env-textarea" rows="3" placeholder="B:v1:eyJhbGciOi..."></textarea>
+                            <span class="env-help-text">Token otentikasi merchant web ShopeePay (didapat dari devtools inspect network request get-transaction-list, diawali B:...)</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="env-form-label" for="cfg-shopee-qris">SHOPEE_QRIS_STATIC (TEMPLATE STRING QRIS SHOPEEPAY - OPSIONAL)</label>
+                            <textarea id="cfg-shopee-qris" class="env-form-input env-form-input-mono env-textarea" rows="2" placeholder="000201010211266..."></textarea>
+                            <span class="env-help-text">String QRIS statis cetak dari ShopeePay (format EMVCo, opsional jika ingin template ShopeePay khusus).</span>
+                        </div>
+                    </div>
+
+                    <!-- Bagian 4: Notifikasi Telegram -->
+                    <div class="env-section-box">
+                        <div class="env-section-header">
+                            <div class="env-section-icon telegram">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.7 6.45a2.25 2.25 0 0 0-.158 4.148l4.47 1.83 1.83 4.47a2.25 2.25 0 0 0 4.148-.158l6.45-16.7a2.242 2.242 0 0 0-.028-1.255z"></path></svg>
+                            </div>
+                            <span class="env-section-title-text">4. Notifikasi Telegram (Opsional)</span>
+                        </div>
+                        <div class="env-grid-2">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-tg-bot">TELEGRAM_BOT_TOKEN</label>
+                                <input type="text" id="cfg-tg-bot" class="env-form-input env-form-input-mono" placeholder="123456789:ABCdefGHIjkl...">
+                                <span class="env-help-text">Token bot Telegram untuk alert token kadaluarsa</span>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="env-form-label" for="cfg-tg-chat">TELEGRAM_CHAT_ID</label>
+                                <input type="text" id="cfg-tg-chat" class="env-form-input env-form-input-mono" placeholder="-100123456789 atau ID Chat">
+                                <span class="env-help-text">ID Telegram chat / grup penerima notifikasi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action Bar -->
+                    <div class="env-bottom-actions">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block;"></span>
+                            <span>Konfigurasi tersinkronisasi langsung dengan berkas .env & memori gateway</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" class="btn btn-secondary" onclick="loadEnvConfig()" title="Muat ulang nilai konfigurasi dari server">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <span>Reset / Muat Ulang</span>
+                            </button>
+                            <button type="button" class="btn-restart-gateway" id="btn-save-env-bottom" onclick="handleSaveEnvConfig()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                <span>Simpan & Restart Gateway</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
         <!-- TAB: SHOPEEPAY PARTNER MANAGEMENT -->
         <section id="tab-shopee" class="tab-content">
             <div class="split-grid">
@@ -1039,9 +1678,14 @@
                             Klik request tersebut, buka sub-tab <strong>Payload</strong> atau <strong>Request</strong>, cari properti <code style="color: var(--accent-primary);">metadata.token</code> (berformat string panjang diawali dengan <code style="color: var(--accent-primary);">B:...</code>). Salin dan tempel ke form di sebelah kiri.
                         </div>
 
-                        <div style="background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary);">
-                            <strong style="color: var(--text-primary);">💡 Notifikasi Telegram Otomatis:</strong><br>
-                            Jika token ShopeePay mendekati masa kadaluarsa atau terjadi error otentikasi, BionPay dapat mengirimkan alert instan ke Telegram Anda. Cukup isi <code style="color: var(--accent-primary);">TELEGRAM_BOT_TOKEN</code> dan <code style="color: var(--accent-primary);">TELEGRAM_CHAT_ID</code> di file <code style="color: var(--accent-primary);">.env</code>.
+                        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary);">
+                            <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 4px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <strong style="color: var(--text-primary); font-size: 0.8125rem;">Notifikasi Telegram Otomatis:</strong>
+                            </div>
+                            <div style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                                Jika token ShopeePay mendekati masa kadaluarsa atau terjadi error otentikasi, BionPay dapat mengirimkan alert instan ke Telegram Anda. Cukup isi <code style="color: var(--accent-primary); font-family: var(--font-mono);">TELEGRAM_BOT_TOKEN</code> dan <code style="color: var(--accent-primary); font-family: var(--font-mono);">TELEGRAM_CHAT_ID</code> di file <code style="color: var(--accent-primary); font-family: var(--font-mono);">.env</code>.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1073,7 +1717,10 @@
 
                     <div class="form-group">
                         <label class="form-label">Request Body / Query (JSON)</label>
-                        <textarea id="api-request-payload" class="form-input form-input-mono" rows="6">{\n  "amount": 25000,\n  "order_id": "TEST-01"\n}</textarea>
+                        <textarea id="api-request-payload" class="form-input form-input-mono" rows="6">{
+  "amount": 25000,
+  "order_id": "TEST-01"
+}</textarea>
                     </div>
 
                     <button class="btn btn-primary" onclick="sendApiPlaygroundRequest()" style="width: 100%;">
@@ -1200,9 +1847,87 @@ console.log('Buka checkout:', data.qris_url);</pre>
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-            event.currentTarget.classList.add('active');
+            if (window.event && window.event.currentTarget) {
+                window.event.currentTarget.classList.add('active');
+            }
             const target = document.getElementById('tab-' + tabId);
             if (target) target.classList.add('active');
+
+            if (tabId === 'env-config') {
+                loadEnvConfig();
+            } else if (tabId === 'applications') {
+                loadApplications();
+            } else if (tabId === 'reconciliation') {
+                loadReconciliation();
+            }
+        }
+
+        async function loadEnvConfig() {
+            try {
+                const res = await fetch('/api/env-config?api_key=' + encodeURIComponent(API_KEY));
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const d = json.data;
+                    if (document.getElementById('lbl-env-path')) document.getElementById('lbl-env-path').innerText = d.env_path || '.env';
+                    if (document.getElementById('cfg-port')) document.getElementById('cfg-port').value = d.port || 3000;
+                    if (document.getElementById('cfg-api-key')) document.getElementById('cfg-api-key').value = d.api_key || '';
+                    if (document.getElementById('cfg-sandbox')) document.getElementById('cfg-sandbox').value = d.sandbox_mode ? 'true' : 'false';
+                    if (document.getElementById('cfg-qris-static')) document.getElementById('cfg-qris-static').value = d.qris_static || '';
+                    if (document.getElementById('cfg-gopay-name')) document.getElementById('cfg-gopay-name').value = d.gopay_merchant_name || '';
+                    if (document.getElementById('cfg-gopay-city')) document.getElementById('cfg-gopay-city').value = d.gopay_merchant_city || '';
+                    if (document.getElementById('cfg-gopay-id')) document.getElementById('cfg-gopay-id').value = d.gopay_merchant_id || '';
+                    if (document.getElementById('cfg-shopee-token')) document.getElementById('cfg-shopee-token').value = d.shopee_token || '';
+                    if (document.getElementById('cfg-shopee-qris')) document.getElementById('cfg-shopee-qris').value = d.shopee_qris_static || '';
+                    if (document.getElementById('cfg-tg-bot')) document.getElementById('cfg-tg-bot').value = d.telegram_bot_token || '';
+                    if (document.getElementById('cfg-tg-chat')) document.getElementById('cfg-tg-chat').value = d.telegram_chat_id || '';
+                }
+            } catch (err) {
+                console.error("Gagal memuat konfigurasi .env:", err);
+            }
+        }
+
+        async function handleSaveEnvConfig(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const btn = document.getElementById('btn-save-env');
+            if (btn) btn.disabled = true;
+
+            showToast("Menyimpan konfigurasi .env ke berkas gateway...");
+
+            const payload = {
+                port: document.getElementById('cfg-port')?.value,
+                api_key: document.getElementById('cfg-api-key')?.value,
+                sandbox_mode: document.getElementById('cfg-sandbox')?.value === 'true',
+                qris_static: document.getElementById('cfg-qris-static')?.value,
+                gopay_merchant_name: document.getElementById('cfg-gopay-name')?.value,
+                gopay_merchant_city: document.getElementById('cfg-gopay-city')?.value,
+                gopay_merchant_id: document.getElementById('cfg-gopay-id')?.value,
+                shopee_token: document.getElementById('cfg-shopee-token')?.value,
+                shopee_qris_static: document.getElementById('cfg-shopee-qris')?.value,
+                telegram_bot_token: document.getElementById('cfg-tg-bot')?.value,
+                telegram_chat_id: document.getElementById('cfg-tg-chat')?.value
+            };
+
+            try {
+                const res = await fetch('/api/save-env', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showToast("Konfigurasi .env berhasil disimpan & diterapkan!");
+                    refreshDashboardData();
+                } else {
+                    showToast("Gagal menyimpan: " + (json.message || "Error"));
+                }
+            } catch (err) {
+                showToast("Error simpan .env: " + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function setPresetAmount(val) {
@@ -1749,8 +2474,482 @@ console.log('Buka checkout:', data.qris_url);</pre>
             }
         }
 
+        // ==========================================
+        // APPLICATION MANAGER & RECONCILIATION LOGIC
+        // ==========================================
+        function toggleNewAppCard() {
+            const card = document.getElementById('card-new-app');
+            if (card) {
+                card.style.display = card.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function openModal(title, htmlContent) {
+            const overlay = document.getElementById('modal-overlay');
+            const titleEl = document.getElementById('modal-title');
+            const bodyEl = document.getElementById('modal-body');
+            if (overlay && titleEl && bodyEl) {
+                titleEl.innerText = title;
+                bodyEl.innerHTML = htmlContent;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        async function loadApplications() {
+            const container = document.getElementById('applications-list-container');
+            if (!container) return;
+
+            try {
+                const res = await fetch('/api/applications', {
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (!json.success || !json.data) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--danger); padding:24px;">Gagal memuat aplikasi: ${json.error || 'Server error'}</div>`;
+                    return;
+                }
+
+                const apps = json.data;
+                if (apps.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:36px; border:1px dashed var(--border-subtle); border-radius:12px;">
+                            <div style="font-size:0.875rem; color:var(--text-muted); margin-bottom:12px;">Belum ada website atau aplikasi eksternal yang didaftarkan</div>
+                            <button class="btn btn-primary btn-sm" onclick="toggleNewAppCard()">+ Daftarkan Website Pertama</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                for (const app of apps) {
+                    const credentials = app.credentials || [];
+                    const liveKeys = credentials.filter(c => c.key_type === 'LIVE' && c.is_active);
+                    const testKeys = credentials.filter(c => c.key_type === 'SANDBOX' && c.is_active);
+
+                    html += `
+                        <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.25);">
+                            <!-- App Header -->
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:0;">${app.name}</h3>
+                                        <span class="badge ${app.is_active ? 'badge-live' : 'badge-sandbox'}">${app.is_active ? 'ACTIVE' : 'DISABLED'}</span>
+                                        <span class="badge" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1;">${app.provider_preference}</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:flex; align-items:center; gap:12px;">
+                                        <span><a href="${app.website_url}" target="_blank" rel="noopener" style="color:var(--primary); text-decoration:none;">${app.website_url}</a></span>
+                                        <span>•</span>
+                                        <span>ID: <code class="font-mono" style="color:#e2e8f0;">${app.id}</code></span>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn btn-secondary btn-sm" onclick="showAuditLogs('${app.id}', '${app.name}')" title="Lihat Audit Log Integrasi">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                                        <span>Audit Log</span>
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="promptCreateApiKey('${app.id}', '${app.name}')" title="Generate API Key Baru">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        <span>Key Baru</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Webhook Card Section -->
+                            <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); border-radius:10px; padding:14px; margin-bottom:14px;">
+                                <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                                    <span>Webhook Integration (Signed HMAC-SHA256)</span>
+                                    <div style="display:flex; gap:6px;">
+                                        <button class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.6875rem;" onclick="testWebhookPing('${app.id}')">Kirim Test Ping</button>
+                                        <button class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.6875rem;" onclick="rotateWebhookSecret('${app.id}')">Rotasi Secret</button>
+                                    </div>
+                                </div>
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px; font-size:0.75rem;">
+                                    <div>
+                                        <div style="color:var(--text-muted); margin-bottom:2px;">Target URL:</div>
+                                        <div class="font-mono" style="background:var(--bg-canvas); padding:5px 8px; border-radius:6px; word-break:break-all; border:1px solid var(--border-subtle); color:#94a3b8;">
+                                            ${app.webhook_url || '<em>Belum dikonfigurasi</em>'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="color:var(--text-muted); margin-bottom:2px;">Signing Secret:</div>
+                                        <div style="display:flex; gap:6px; align-items:center;">
+                                            <input type="password" value="${app.webhook_secret || ''}" readonly class="form-input form-input-mono" style="padding:4px 8px; font-size:0.6875rem; flex:1;" id="sec-${app.id}">
+                                            <button class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="copySecret('${app.id}')">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Credentials Section -->
+                            <div style="margin-bottom:8px;">
+                                <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px;">
+                                    API Credentials Aktif (${credentials.length} key)
+                                </div>
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:8px;">
+                                    ${credentials.map(c => `
+                                        <div style="background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+                                            <div>
+                                                <div style="display:flex; align-items:center; gap:6px;">
+                                                    <span class="badge ${c.key_type === 'LIVE' ? 'badge-live' : 'badge-sandbox'}" style="font-size:0.625rem; padding:1px 6px;">${c.key_type}</span>
+                                                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-primary);">${c.name}</span>
+                                                </div>
+                                                <div class="font-mono" style="font-size:0.6875rem; color:#94a3b8; margin-top:2px;">
+                                                    Prefix: <code style="color:#38bdf8;">${c.api_key_prefix}...</code>
+                                                    <span style="margin-left:8px; color:var(--text-muted);">${c.last_used_at ? 'Dipakai: ' + new Date(c.last_used_at).toLocaleDateString() : 'Belum dipakai'}</span>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-secondary btn-sm" style="padding:3px 7px; color:var(--danger); border-color:rgba(239,68,68,0.25);" onclick="revokeApiKey('${app.id}', '${c.id}', '${c.name}')" title="Cabut Kredensial">Revoke</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="text-align:center; color:var(--danger); padding:24px;">Error: ${err.message}</div>`;
+            }
+        }
+
+        function copySecret(appId) {
+            const input = document.getElementById('sec-' + appId);
+            if (input) {
+                input.type = 'text';
+                navigator.clipboard.writeText(input.value);
+                setTimeout(() => { input.type = 'password'; }, 2000);
+                alert('Webhook secret berhasil disalin ke clipboard');
+            }
+        }
+
+        async function submitCreateApp(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-new-app');
+            btn.disabled = true;
+
+            const payload = {
+                name: document.getElementById('new-app-name').value,
+                website_url: document.getElementById('new-app-website').value,
+                webhook_url: document.getElementById('new-app-webhook').value || null,
+                provider_preference: document.getElementById('new-app-provider').value,
+                description: document.getElementById('new-app-desc').value || ''
+            };
+
+            try {
+                const res = await fetch('/api/applications', {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    toggleNewAppCard();
+                    const liveKey = json.data.initial_credentials?.live?.api_key || '-';
+                    const testKey = json.data.initial_credentials?.sandbox?.api_key || '-';
+                    const secret = json.data.webhook_secret || '-';
+
+                    openModal('Kredensial API Baru Terbit (Simpan Sekarang)', `
+                        <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px; margin-bottom:14px; font-size:0.8125rem; color:#10b981;">
+                            ✅ Aplikasi <strong>${json.data.name}</strong> berhasil didaftarkan. Harap salin kunci API berikut karena tidak akan ditampilkan ulang secara penuh demi keamanan.
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">LIVE API Key:</label>
+                            <input type="text" value="${liveKey}" readonly class="form-input form-input-mono" style="color:#10b981;" onclick="this.select()">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">SANDBOX API Key:</label>
+                            <input type="text" value="${testKey}" readonly class="form-input form-input-mono" style="color:#f59e0b;" onclick="this.select()">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Webhook Signing Secret:</label>
+                            <input type="text" value="${secret}" readonly class="form-input form-input-mono" style="color:#38bdf8;" onclick="this.select()">
+                        </div>
+                        <div style="text-align:right;">
+                            <button class="btn btn-primary btn-sm" onclick="closeModal(); loadApplications();">Saya Sudah Menyimpan</button>
+                        </div>
+                    `);
+                } else {
+                    alert('Gagal membuat aplikasi: ' + (json.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function promptCreateApiKey(appId, appName) {
+            openModal(`Generate API Key Baru • ${appName}`, `
+                <form onsubmit="submitNewApiKey(event, '${appId}')">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Nama Kredensial / Label</label>
+                        <input type="text" id="modal-key-name" class="form-input" placeholder="contoh: Backend Server Key" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Lingkungan Key</label>
+                        <select id="modal-key-type" class="form-input">
+                            <option value="LIVE">LIVE (Transaksi Asli)</option>
+                            <option value="SANDBOX">SANDBOX (Simulasi Testing)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label class="form-label">Scope Izin</label>
+                        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.75rem; color:var(--text-secondary);">
+                            <label><input type="checkbox" id="modal-scope-write" checked> payments:write (Buat QRIS & tagihan baru)</label>
+                            <label><input type="checkbox" id="modal-scope-read" checked> payments:read (Cek status pembayaran)</label>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Terbitkan Key</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function submitNewApiKey(e, appId) {
+            e.preventDefault();
+            const name = document.getElementById('modal-key-name').value;
+            const key_type = document.getElementById('modal-key-type').value;
+            const permissions = [];
+            if (document.getElementById('modal-scope-write').checked) permissions.push('payments:write');
+            if (document.getElementById('modal-scope-read').checked) permissions.push('payments:read');
+
+            try {
+                const res = await fetch(`/api/applications/${appId}/keys`, {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, key_type, permissions })
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    openModal('Kunci API Berhasil Dibuat', `
+                        <div style="margin-bottom:14px; font-size:0.8125rem;">
+                            Kunci API baru Anda telah diterbitkan. Simpan token ini dengan aman:
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <input type="text" value="${json.data.api_key}" readonly class="form-input form-input-mono" style="color:#10b981;" onclick="this.select()">
+                        </div>
+                        <div style="text-align:right;">
+                            <button class="btn btn-primary btn-sm" onclick="closeModal(); loadApplications();">Selesai</button>
+                        </div>
+                    `);
+                } else {
+                    alert('Gagal membuat API key: ' + (json.error || 'Server error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function revokeApiKey(appId, keyId, keyName) {
+            if (!confirm(`Cabut kunci API "${keyName}"? Kunci ini tidak akan dapat digunakan kembali.`)) return;
+            try {
+                const res = await fetch(`/api/applications/${appId}/keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    loadApplications();
+                } else {
+                    alert('Gagal mencabut API key: ' + (json.error || 'Server error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function rotateWebhookSecret(appId) {
+            if (!confirm('Rotasi secret webhook untuk aplikasi ini? Endpoint penerima harus segera diperbarui dengan secret baru.')) return;
+            try {
+                const res = await fetch(`/api/applications/${appId}/rotate-webhook-secret`, {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    alert('Webhook secret berhasil dirotasi ke: ' + json.data.webhook_secret);
+                    loadApplications();
+                } else {
+                    alert('Gagal merotasi secret: ' + (json.error || 'Server error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function testWebhookPing(appId) {
+            try {
+                const res = await fetch(`/api/applications/${appId}/test-webhook`, {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert(`✅ Test webhook terkirim (HTTP ${json.data.http_status}) dalam ${json.data.duration_ms}ms! Response: ${json.data.response_body}`);
+                } else {
+                    alert(`❌ Gagal mengirim test webhook: ${json.error || 'URL tidak merespons'}`);
+                }
+            } catch (err) {
+                alert('Error test webhook: ' + err.message);
+            }
+        }
+
+        async function showAuditLogs(appId, appName) {
+            try {
+                const res = await fetch(`/api/applications/${appId}/audit-logs`, {
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const logs = json.data;
+                    let logsHtml = '';
+                    if (logs.length === 0) {
+                        logsHtml = '<div style="color:var(--text-muted); text-align:center; padding:16px;">Belum ada riwayat aktivitas</div>';
+                    } else {
+                        logsHtml = logs.map(l => `
+                            <div style="border-bottom:1px solid var(--border-subtle); padding:8px 0; font-size:0.75rem;">
+                                <div style="display:flex; justify-content:space-between; color:var(--text-primary); font-weight:600;">
+                                    <span>${l.action}</span>
+                                    <span class="font-mono" style="color:var(--text-muted); font-size:0.6875rem;">${new Date(l.created_at).toLocaleString()}</span>
+                                </div>
+                                <div style="color:var(--text-secondary); margin-top:2px;">Aktor: ${l.actor_type} (${l.actor_id}) | IP: ${l.ip_address}</div>
+                            </div>
+                        `).join('');
+                    }
+                    openModal(`Audit Logs • ${appName}`, `
+                        <div style="max-height:360px; overflow-y:auto;">
+                            ${logsHtml}
+                        </div>
+                    `);
+                }
+            } catch (err) {
+                alert('Gagal memuat audit log: ' + err.message);
+            }
+        }
+
+        // ==========================================
+        // RECONCILIATION LOGIC
+        // ==========================================
+        async function loadReconciliation() {
+            const tableUnmatched = document.getElementById('table-unmatched-body');
+            const tableReview = document.getElementById('table-review-body');
+            if (!tableUnmatched || !tableReview) return;
+
+            try {
+                const res = await fetch('/api/reconciliation/unmatched', {
+                    headers: { 'x-api-key': API_KEY }
+                });
+                const json = await res.json();
+                if (!json.success || !json.data) return;
+
+                const { unclaimed_provider_transactions, payments_requiring_review } = json.data;
+
+                // Render Unmatched Provider Transactions
+                if (unclaimed_provider_transactions.length === 0) {
+                    tableUnmatched.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:24px;">Tidak ada mutasi provider yang belum teralokasi (Semua bersih dan sesuai)</td></tr>`;
+                } else {
+                    tableUnmatched.innerHTML = unclaimed_provider_transactions.map(tx => `
+                        <tr>
+                            <td class="font-mono">${new Date(tx.transaction_time).toLocaleString('id-ID')}</td>
+                            <td><span class="badge ${tx.provider === 'GOPAY' ? 'badge-live' : 'badge-sandbox'}">${tx.provider}</span></td>
+                            <td class="font-mono" style="font-size:0.75rem; color:#93c5fd;">${tx.provider_transaction_id}</td>
+                            <td class="font-mono" style="font-size:0.75rem;">${tx.provider_order_id || '-'}</td>
+                            <td class="font-mono" style="font-weight:700; color:var(--success);">Rp ${Number(tx.amount).toLocaleString('id-ID')}</td>
+                            <td>${tx.payer_issuer}</td>
+                            <td><span class="badge" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">UNCLAIMED</span></td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.6875rem;" onclick="promptManualClaim('${tx.id}', '${tx.provider_transaction_id}', ${tx.amount})">
+                                    Cocokkan Manual
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Render Review Required Payments
+                if (payments_requiring_review.length === 0) {
+                    tableReview.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:24px;">Tidak ada transaksi pembayaran yang tertahan (0 review required)</td></tr>`;
+                } else {
+                    tableReview.innerHTML = payments_requiring_review.map(p => `
+                        <tr>
+                            <td class="font-mono">${new Date(p.created_at).toLocaleString('id-ID')}</td>
+                            <td><strong>${p.app_name || p.application_id}</strong></td>
+                            <td class="font-mono" style="font-size:0.75rem; color:#38bdf8;">${p.id}</td>
+                            <td class="font-mono" style="font-size:0.75rem;">${p.order_id}</td>
+                            <td class="font-mono" style="font-weight:700; color:var(--warning);">Rp ${Number(p.amount).toLocaleString('id-ID')}</td>
+                            <td><span class="badge" style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);">${p.status}</span></td>
+                            <td style="font-size:0.75rem; color:var(--text-muted); max-width:220px;">${p.review_notes || 'Deteksi benturan nominal identik'}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" style="padding:3px 8px; font-size:0.6875rem;" onclick="promptResolveReview('${p.id}', ${p.amount})">
+                                    Selesaikan
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error load reconciliation:', err);
+            }
+        }
+
+        function promptManualClaim(ptxId, ptxCode, amount) {
+            openModal('Cocokkan Transaksi Provider ke Tagihan', `
+                <form onsubmit="submitReconciliationClaim(event, '${ptxId}', ${amount})">
+                    <div style="font-size:0.8125rem; margin-bottom:12px; color:var(--text-secondary);">
+                        Pasangkan transaksi mutasi <strong>${ptxCode}</strong> (Rp ${Number(amount).toLocaleString('id-ID')}) secara manual dengan tagihan pembayaran.
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Payment ID Tagihan (pay_...)</label>
+                        <input type="text" id="modal-claim-payment-id" class="form-input form-input-mono" placeholder="pay_..." required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label class="form-label">Alasan Pencocokan Manual (Audit Trail)</label>
+                        <input type="text" id="modal-claim-reason" class="form-input" placeholder="Verifikasi manual oleh administrator setelah validasi bukti transfer" required>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Klaim & Verifikasi Lunas</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function submitReconciliationClaim(e, ptxId, amount) {
+            e.preventDefault();
+            const payment_id = document.getElementById('modal-claim-payment-id').value.trim();
+            const reason = document.getElementById('modal-claim-reason').value.trim();
+
+            try {
+                const res = await fetch('/api/reconciliation/claim', {
+                    method: 'POST',
+                    headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_id, provider_transaction_id: ptxId, reason })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert('✅ Transaksi berhasil dipasangkan dan ditandai PAID!');
+                    closeModal();
+                    loadReconciliation();
+                    refreshDashboardData();
+                } else {
+                    alert('❌ Gagal: ' + (json.error || 'Server error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
         // Initial fetch
         refreshDashboardData();
+        loadEnvConfig();
         setInterval(refreshDashboardData, 8000);
     </script>
 </body>

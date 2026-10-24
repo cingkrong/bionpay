@@ -3,6 +3,7 @@ node_modules/
 .gopay_cache.json
 .GOPAY_SESI_JANGAN_DIHAPUS.json
 .gateway_store.json
+.bionpay_db.json
 *.log
 *.raw.js
 obfuscate.js
