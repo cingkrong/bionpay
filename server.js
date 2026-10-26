@@ -662,6 +662,16 @@ app.get('/', (req, res) => {
     renderDashboard(req, res);
 });
 
+// Route Official Landing & Sales Page
+app.get(['/landing', '/sales', '/pricing'], (req, res) => {
+    const landingPath = path.join(__dirname, 'views', 'landing.html');
+    if (fs.existsSync(landingPath)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.sendFile(landingPath);
+    }
+    res.status(404).send('Landing page not found');
+});
+
 app.get('/dashboard', (req, res) => {
     renderDashboard(req, res);
 });

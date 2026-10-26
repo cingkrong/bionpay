@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BionPay — Unified Dual-Provider QRIS Gateway & Multi-App Payment Hub</title>
+  <meta name="description" content="Payment Gateway Mandiri 0% MDR Fee berbasis GoPay & ShopeePay Partner. Dynamic QRIS EMVCo, rekonsiliasi realtime, signed webhook, dan full REST API v1. Tersedia layanan SaaS & Source Code Berlisensi.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons & Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              purple: '#533AFD',
+              darkPurple: '#4434D4',
+              navy: '#060B14',
+              surface: '#0B1324',
+              card: '#0F1A30',
+              border: '#1E293B',
+              borderLight: '#334155',
+              gopay: '#00AED9',
+              shopee: '#EE4D2D',
+              emerald: '#10B981',
+            }
+          },
+          boxShadow: {
+            'stripe': 'rgba(50,50,93,0.25) 0px 30px 60px -12px, rgba(0,0,0,0.3) 0px 18px 36px -18px',
+            'glow-purple': '0 0 35px -5px rgba(83, 58, 253, 0.35)',
+            'glow-gopay': '0 0 30px -5px rgba(0, 174, 217, 0.3)',
+            'glow-shopee': '0 0 30px -5px rgba(238, 77, 45, 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #060B14;
+      color: #F8FAFC;
+      font-feature-settings: "ss01", "cv02", "cv03", "cv04";
+    }
+
+    /* Ambient background grid */
+    .bg-grid-pattern {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    /* Custom range slider thumb */
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #533AFD;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 15px rgba(83, 58, 253, 0.8);
+      cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #533AFD;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 15px rgba(83, 58, 253, 0.8);
+      cursor: pointer;
+    }
+
+    /* Code scrollbar */
+    .code-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .code-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-brand-purple selection:text-white">
+
+  <!-- Ambient Top Glow -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-brand-purple/20 via-brand-purple/5 to-transparent blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- NAVIGATION BAR -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-brand-navy/80 border-b border-slate-800/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <a href="#hero" class="flex items-center space-x-3 group">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-purple to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-purple/30 group-hover:scale-105 transition">
+          <i class="fa-solid fa-bolt-lightning text-white text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-xl font-extrabold tracking-tight text-white">Bion<span class="text-brand-purple">Pay</span></span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-purple/20 text-indigo-400 border border-brand-purple/30">v2.0 Hub</span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium tracking-wide">Unified QRIS Gateway</p>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-300">
+        <a href="#features" class="hover:text-white transition">Fitur Utama</a>
+        <a href="#calculator" class="hover:text-white transition">Kalkulator MDR</a>
+        <a href="#architecture" class="hover:text-white transition">Arsitektur</a>
+        <a href="#demo" class="hover:text-white transition">Live Demo QRIS</a>
+        <a href="#api" class="hover:text-white transition">Developer API</a>
+        <a href="#pricing" class="hover:text-white transition">Pilihan Paket</a>
+        <a href="#faq" class="hover:text-white transition">FAQ</a>
+      </nav>
+
+      <!-- CTAs -->
+      <div class="flex items-center space-x-3">
+        <a href="#pricing" class="hidden sm:inline-flex px-4 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-900 border border-slate-700/80 rounded-xl transition">
+          Lihat Lisensi
+        </a>
+        <a href="#pricing" class="px-5 py-2.5 text-xs font-bold text-white bg-brand-purple hover:bg-brand-darkPurple rounded-xl shadow-lg shadow-brand-purple/25 hover:shadow-brand-purple/40 transition flex items-center space-x-2">
+          <span>Mulai Sekarang</span>
+          <i class="fa-solid fa-arrow-right text-[11px]"></i>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section id="hero" class="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden bg-grid-pattern">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Badge Announcement -->
+      <div class="flex justify-center">
+        <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-brand-purple/40 text-xs font-medium text-slate-300 shadow-lg shadow-brand-purple/10">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-white font-semibold">Tersedia Model SaaS & Full Source Code</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-indigo-400 font-bold flex items-center space-x-1">
+            <span>0% MDR Fee</span>
+            <i class="fa-solid fa-chevron-right text-[9px]"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Main Headline -->
+      <div class="mt-8 text-center max-w-4xl mx-auto space-y-6">
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.1]">
+          Payment Gateway Mandiri <br class="hidden sm:inline">
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-400">0% Potongan Biaya MDR.</span>
+        </h1>
+        <p class="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
+          Terima pembayaran via <strong>QRIS Dinamis Otomatis</strong> langsung ke rekening GoPay (GoBiz) & ShopeePay Anda. 100% uang customer masuk utuh tanpa potongan pihak ketiga, tanpa hold dana H+2, dan tanpa risiko suspend.
+        </p>
+      </div>
+
+      <!-- Dual Call To Actions -->
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#pricing" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-purple to-indigo-600 hover:from-brand-darkPurple hover:to-indigo-700 text-white font-bold rounded-2xl shadow-xl shadow-brand-purple/30 hover:scale-[1.02] active:scale-[0.98] transition flex items-center justify-center space-x-3 text-sm">
+          <i class="fa-solid fa-rocket"></i>
+          <span>Pilih Paket BionPay (SaaS / Source Code)</span>
+        </a>
+        <a href="#demo" class="w-full sm:w-auto px-8 py-4 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-bold rounded-2xl border border-slate-700/80 transition flex items-center justify-center space-x-2 text-sm">
+          <i class="fa-solid fa-qrcode text-brand-purple"></i>
+          <span>Coba Live Simulator QRIS</span>
+        </a>
+      </div>
+
+      <!-- Live Trust Badges & Supported Banks -->
+      <div class="mt-16 pt-12 border-t border-slate-800/80 max-w-5xl mx-auto text-center space-y-6">
+        <p class="text-xs uppercase font-extrabold tracking-wider text-slate-500">
+          Didukung Standar QRIS Nasional (ASPI & Bank Indonesia) — Terima Bayar dari Seluruh Bank & E-Wallet
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-10 opacity-70 grayscale hover:grayscale-0 transition-all duration-300 text-slate-400">
+          <span class="font-bold text-sm tracking-widest flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-300"></i><span>BCA MOBILE</span></span>
+          <span class="font-bold text-sm tracking-widest flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-300"></i><span>LIVIN MANDIRI</span></span>
+          <span class="font-bold text-sm tracking-widest flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-300"></i><span>BRImo</span></span>
+          <span class="font-bold text-sm tracking-widest flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-300"></i><span>BNI MOBILE</span></span>
+          <span class="font-bold text-sm tracking-widest text-[#00AED9] flex items-center space-x-1.5"><i class="fa-solid fa-wallet"></i><span>GOPAY</span></span>
+          <span class="font-bold text-sm tracking-widest text-[#EE4D2D] flex items-center space-x-1.5"><i class="fa-solid fa-wallet"></i><span>SHOPEEPAY</span></span>
+          <span class="font-bold text-sm tracking-widest text-purple-400 flex items-center space-x-1.5"><i class="fa-solid fa-wallet"></i><span>OVO</span></span>
+          <span class="font-bold text-sm tracking-widest text-sky-400 flex items-center space-x-1.5"><i class="fa-solid fa-wallet"></i><span>DANA</span></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PROBLEM VS SOLUTION SECTION -->
+  <section class="py-20 bg-slate-950/60 border-y border-slate-900 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-4">
+        <h2 class="text-xs uppercase font-extrabold tracking-widest text-brand-purple">Realita Bisnis Online Indonesia</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Kenapa Harus Pindah ke BionPay?</h3>
+        <p class="text-sm sm:text-base text-slate-400">
+          Payment gateway konvensional mengambil keuntungan besar dari setiap transaksi Anda dan sering kali menahan omset bisnis Anda selama berhari-hari.
+        </p>
+      </div>
+
+      <div class="mt-14 grid md:grid-cols-2 gap-8">
+        
+        <!-- The Pain (Gateway Konvensional) -->
+        <div class="bg-rose-950/20 border border-rose-900/40 rounded-3xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center space-x-3 text-rose-400 font-bold text-lg">
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4>Payment Gateway Konvensional</h4>
+          </div>
+          <ul class="space-y-4 text-xs sm:text-sm text-slate-300">
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-xmark text-rose-400 text-sm mt-0.5"></i>
+              <span><strong>MDR Fee Tinggi:</strong> Dipotong 0.7% s/d 1.5% setiap transaksi. Makin besar omset Anda, makin banyak uang terbuang.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-xmark text-rose-400 text-sm mt-0.5"></i>
+              <span><strong>Pencairan Lama (Hold H+1 s/d H+3):</strong> Uang Anda mengendap di pihak ketiga, cashflow bisnis tersendat.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-xmark text-rose-400 text-sm mt-0.5"></i>
+              <span><strong>Risiko Akun Freeze:</strong> Transaksi ramai sedikit langsung ditagih invoice, freeze saldo sepihak, atau suspend mendadak.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-xmark text-rose-400 text-sm mt-0.5"></i>
+              <span><strong>Biaya Payout Bank:</strong> Setiap tarik saldo dikenakan biaya withdraw Rp 4.500 - Rp 5.000 per tarikan.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- The Solution (BionPay) -->
+        <div class="bg-gradient-to-b from-brand-card to-slate-900 border border-brand-purple/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl shadow-brand-purple/10">
+          <div class="flex items-center space-x-3 text-emerald-400 font-bold text-lg">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <h4>Solusi BionPay Unified Gateway</h4>
+          </div>
+          <ul class="space-y-4 text-xs sm:text-sm text-slate-300">
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-check text-emerald-400 text-sm mt-0.5"></i>
+              <span><strong>0% MDR Fee Selamanya:</strong> BionPay tidak mengambil sepeser pun dari nominal transaksi. 100% uang langsung masuk merchant Anda.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-check text-emerald-400 text-sm mt-0.5"></i>
+              <span><strong>Instant Settlement Realtime:</strong> Uang langsung masuk saat itu juga ke rekening/e-wallet GoBiz atau ShopeePay Anda.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-check text-emerald-400 text-sm mt-0.5"></i>
+              <span><strong>Bebas Risiko Freeze:</strong> Karena menggunakan akun merchant resmi Anda sendiri (GoBiz/Shopee Partner), bukan perantara fintech.</span>
+            </li>
+            <li class="flex items-start space-x-3">
+              <i class="fa-solid fa-check text-emerald-400 text-sm mt-0.5"></i>
+              <span><strong>Dual-Provider Failover:</strong> Gabungkan GoPay & ShopeePay dalam 1 gateway. Jika satu bermasalah, yang lain siap sedia.</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SAVINGS CALCULATOR (INTERACTIVE WIDGET) -->
+  <section id="calculator" class="py-24 bg-brand-navy relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center space-y-3">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <i class="fa-solid fa-calculator mr-1"></i> Interactive ROI Tool
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Berapa Penghematan Anda Tiap Bulan?</h2>
+        <p class="text-sm text-slate-400">Geser slider di bawah ini sesuai estimasi omset bulanan toko Anda:</p>
+      </div>
+
+      <div class="mt-12 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-stripe space-y-8">
+        
+        <!-- Slider Control -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs uppercase font-extrabold text-slate-400">Omset Bulanan Toko Anda</span>
+            <span id="sliderValue" class="text-2xl font-black text-white font-mono">Rp 50.000.000</span>
+          </div>
+          <input type="range" id="omsetSlider" min="5000000" max="300000000" step="5000000" value="50000000" class="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-[11px] text-slate-500 mt-2 font-mono">
+            <span>Rp 5 Juta</span>
+            <span>Rp 100 Juta</span>
+            <span>Rp 200 Juta</span>
+            <span>Rp 300 Juta+</span>
+          </div>
+        </div>
+
+        <!-- Comparison Cards Result -->
+        <div class="grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+          
+          <div class="bg-rose-950/20 border border-rose-900/40 rounded-2xl p-5 space-y-2">
+            <span class="text-xs text-rose-400 font-semibold">Fee Gateway Konvensional (0.7% MDR)</span>
+            <div id="pgFee" class="text-2xl font-bold text-rose-400 font-mono">Rp 350.000 / bln</div>
+            <p class="text-[11px] text-slate-400">Uang yang hilang sia-sia dipotong payment gateway tiap bulan.</p>
+          </div>
+
+          <div class="bg-emerald-950/20 border border-emerald-500/40 rounded-2xl p-5 space-y-2">
+            <span class="text-xs text-emerald-400 font-semibold">Hemat Menggunakan BionPay (Setahun)</span>
+            <div id="annualSavings" class="text-2xl font-black text-emerald-400 font-mono">Rp 4.200.000 / thn</div>
+            <p class="text-[11px] text-emerald-300/80 font-medium">Bisa dialihkan untuk biaya iklan Meta Ads atau profit bersih bisnis Anda!</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE & DUAL-PROVIDER WORKFLOW -->
+  <section id="architecture" class="py-24 bg-slate-950 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-4">
+        <h2 class="text-xs uppercase font-extrabold tracking-widest text-brand-purple">Enterprise Grade Architecture</h2>
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Bagaimana Cara BionPay Bekerja?</h3>
+        <p class="text-sm sm:text-base text-slate-400">
+          Menggunakan arsitektur komputasi lokal berstandar EMVCo QRIS tanpa manipulasi ilegal. Transaksi diproses langsung melalui API Partner resmi GoBiz dan ShopeePay.
+        </p>
+      </div>
+
+      <!-- 4-Step Diagram Grid -->
+      <div class="grid md:grid-cols-4 gap-6">
+        
+        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-4 relative group hover:border-brand-purple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-brand-purple/10 text-brand-purple flex items-center justify-center text-xl font-bold font-mono">
+            01
+          </div>
+          <h4 class="text-base font-bold text-white">Generate EMVCo QRIS</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Sistem membaca template QRIS statis merchant Anda, lalu menyusun Tag 54 (Nominal), Tag 62 (Bill ID), dan menghitung ulang CRC16 Checksum.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-4 relative group hover:border-brand-purple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-[#00AED9]/10 text-[#00AED9] flex items-center justify-center text-xl font-bold font-mono">
+            02
+          </div>
+          <h4 class="text-base font-bold text-white">Customer Scan & Bayar</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Customer scan QRIS via BCA, Mandiri, BRI, GoPay, ShopeePay, OVO, atau Dana. Nominal langsung terkunci dan tidak bisa diubah pembeli.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-4 relative group hover:border-brand-purple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-[#EE4D2D]/10 text-[#EE4D2D] flex items-center justify-center text-xl font-bold font-mono">
+            03
+          </div>
+          <h4 class="text-base font-bold text-white">Realtime Polling Engine</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Worker BionPay memeriksa mutasi settlement masuk dari server GoBiz / ShopeePay setiap 5-10 detik secara otomatis di latar belakang.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-4 relative group hover:border-brand-purple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl font-bold font-mono">
+            04
+          </div>
+          <h4 class="text-base font-bold text-white">Signed Webhook Dispatch</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Setelah mutasi cocok, BionPay menandatangani payload dengan HMAC-SHA256 dan menembak webhook ke website toko Anda seketika.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LIVE INTERACTIVE QRIS SIMULATOR -->
+  <section id="demo" class="py-24 bg-brand-surface relative border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center space-y-3 mb-16">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-brand-purple/10 text-brand-purple border border-brand-purple/30">
+          Interactive Live Demo
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Rasakan Pengalaman Checkout BionPay</h2>
+        <p class="text-sm text-slate-400">Simulasikan proses pembuatan dynamic QRIS dan pengecekan verifikasi otomatis di bawah ini:</p>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl grid lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Controls Left -->
+        <div class="lg:col-span-6 space-y-6">
+          
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Nama Produk / Order ID</label>
+            <input type="text" id="demoProductName" value="Langganan BionPay Pro" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-purple">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Nominal Tagihan (Rp)</label>
+            <div class="relative">
+              <span class="absolute left-4 top-3 text-slate-500 font-bold text-sm">Rp</span>
+              <input type="number" id="demoAmount" value="75000" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-purple">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Pilihan Provider QRIS</label>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <button type="button" onclick="setDemoProvider('AUTO')" id="btnAuto" class="py-2.5 px-3 rounded-xl border border-brand-purple bg-brand-purple/20 text-white font-bold transition">
+                ⚡ AUTO
+              </button>
+              <button type="button" onclick="setDemoProvider('GOPAY')" id="btnGopay" class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-bold hover:text-white transition">
+                🔵 GoPay
+              </button>
+              <button type="button" onclick="setDemoProvider('SHOPEEPAY')" id="btnShopee" class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-bold hover:text-white transition">
+                🟠 ShopeePay
+              </button>
+            </div>
+          </div>
+
+          <button type="button" onclick="generateDemoQR()" class="w-full py-3.5 bg-gradient-to-r from-brand-purple to-indigo-600 hover:opacity-90 text-white font-bold rounded-xl shadow-lg shadow-brand-purple/30 transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Simulasikan QRIS Dinamis</span>
+          </button>
+
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 flex items-start space-x-2.5">
+            <i class="fa-solid fa-circle-info text-brand-purple mt-0.5"></i>
+            <span>Pada mode riil, nominal akan otomatis terkunci pada aplikasi mobile banking pembeli (Tag 54 EMVCo) dan diverifikasi seketika saat dana masuk.</span>
+          </div>
+
+        </div>
+
+        <!-- QR Display Right -->
+        <div class="lg:col-span-6 flex justify-center">
+          <div class="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-4 shadow-xl relative overflow-hidden">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-xs font-bold text-slate-300" id="dispProviderBadge">Dynamic QRIS (Auto)</span>
+              </div>
+              <span class="text-[11px] font-mono text-slate-500" id="demoTimer">14:59</span>
+            </div>
+
+            <!-- QR Preview Container -->
+            <div class="p-4 bg-white rounded-xl inline-block shadow-inner mx-auto">
+              <img id="demoQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020101021226610014ID.LINKAJA.WWW01189360091100222771765204549953033605405750005802ID5912Bion+Digital6009SURAKARTA62070703A0163048B5D" alt="Demo QR Code" class="w-48 h-48 mx-auto object-contain">
+            </div>
+
+            <div>
+              <p class="text-xs text-slate-400" id="dispProductName">Langganan BionPay Pro</p>
+              <div class="text-2xl font-black text-white font-mono mt-1" id="dispAmount">Rp 75.000</div>
+              <div class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-mono bg-slate-800 text-slate-300 mt-2">
+                <span>Unique Tag:</span>
+                <span class="text-emerald-400 font-bold" id="dispUniqueCode">+Rp 127</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-center space-x-2 text-[11px] text-slate-500">
+              <i class="fa-solid fa-lock text-brand-purple"></i>
+              <span>ASPI Standard EMVCo Tag 54 Compliant</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DEVELOPER API & CODE INTEGRATION -->
+  <section id="api" class="py-24 bg-slate-950 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-3">
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            Developer First REST API
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Integrasi Kurang Dari 10 Menit</h2>
+          <p class="text-sm text-slate-400 max-w-xl">
+            Tersedia SDK dan REST API v1 modern dengan dukungan `Idempotency-Key`, signed webhook HMAC-SHA256, dan Swagger UI OpenAPI 3.0.
+          </p>
+        </div>
+
+        <!-- Code Language Switcher -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 p-1.5 rounded-xl space-x-1 text-xs">
+          <button onclick="switchCodeTab('curl')" id="tabBtn-curl" class="px-3.5 py-1.5 rounded-lg font-bold bg-brand-purple text-white transition">cURL</button>
+          <button onclick="switchCodeTab('node')" id="tabBtn-node" class="px-3.5 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition">Node.js</button>
+          <button onclick="switchCodeTab('php')" id="tabBtn-php" class="px-3.5 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition">PHP / Laravel</button>
+          <button onclick="switchCodeTab('webhook')" id="tabBtn-webhook" class="px-3.5 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition">Signed Webhook</button>
+        </div>
+      </div>
+
+      <!-- Code Box Display -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+        <div class="bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+            <span class="text-xs text-slate-400 font-mono ml-2" id="codeSnippetTitle">POST /v1/payments (Create Dynamic QRIS)</span>
+          </div>
+          <button onclick="copyCode()" class="text-xs text-slate-400 hover:text-white flex items-center space-x-1.5">
+            <i class="fa-regular fa-copy"></i>
+            <span id="copyBtnText">Salin Kode</span>
+          </button>
+        </div>
+
+        <pre class="p-6 text-xs sm:text-sm font-mono text-slate-300 overflow-x-auto code-scroll leading-relaxed"><code id="codeSnippetBox">curl -X POST https://api.yourdomain.com/v1/payments \
+  -H "Authorization: Bearer bp_live_9d82138abf0192e" \
+  -H "Idempotency-Key: trx_order_99012" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 150000,
+    "order_id": "INV-2026-001",
+    "customer_name": "Andika Bion",
+    "customer_email": "customer@bion.id",
+    "provider": "AUTO"
+  }'</code></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PRICING & COMMERCIAL OFFERINGS (DUAL MODEL: SAAS VS SOURCE CODE) -->
+  <section id="pricing" class="py-24 bg-brand-navy relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-brand-purple/10 text-brand-purple border border-brand-purple/30">
+          Transparan & Fleksibel
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">Pilih Model yang Sesuai Bisnis Anda</h2>
+        <p class="text-sm sm:text-base text-slate-400">
+          Gunakan layanan <strong>Cloud SaaS</strong> siap pakai tanpa pusing setup server, atau beli <strong>Full Source Code</strong> berlisensi untuk kendali 100% mandiri.
+        </p>
+
+        <!-- Pricing Toggle Switch -->
+        <div class="pt-4 flex items-center justify-center">
+          <div class="bg-slate-900 p-1.5 rounded-2xl border border-slate-800 flex items-center space-x-2 text-xs">
+            <button onclick="switchPricing('saas')" id="btnPriceSaas" class="px-6 py-2.5 rounded-xl font-bold bg-brand-purple text-white shadow-md transition">
+              ☁️ Cloud SaaS (Siap Pakai)
+            </button>
+            <button onclick="switchPricing('source')" id="btnPriceSource" class="px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-white transition">
+              💻 Source Code Berlisensi (Self-Hosted)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAAS PRICING CARDS -->
+      <div id="pricingSaasGrid" class="grid lg:grid-cols-3 gap-8">
+        
+        <!-- Starter SaaS -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-white">Starter SaaS</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">Toko Tunggal</span>
+            </div>
+            <p class="text-xs text-slate-400">Cocok untuk toko online pemula yang ingin bypass potongan fee transaksi.</p>
+            <div class="text-3xl font-extrabold text-white font-mono">
+              Rp 149.000 <span class="text-xs font-normal text-slate-500">/ bulan</span>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>0% MDR Fee</strong> per transaksi</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>1 Website / Aplikasi terhubung</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>QRIS Dinamis GoPay & ShopeePay</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Auto-settlement verifikasi 10 detik</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Support Standar via WhatsApp</span></li>
+            </ul>
+          </div>
+          <button onclick="openCheckoutModal('SaaS Starter - Rp 149.000/bln')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition">
+            Pilih Paket Starter
+          </button>
+        </div>
+
+        <!-- Pro SaaS (Featured) -->
+        <div class="bg-gradient-to-b from-brand-card to-slate-900 border-2 border-brand-purple rounded-3xl p-8 space-y-6 flex flex-col justify-between relative shadow-stripe shadow-brand-purple/20">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-purple text-white shadow-lg shadow-brand-purple/50">
+            Paling Populer & Best Value
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-white">Pro Hub SaaS</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-purple/20 text-indigo-300 border border-brand-purple/30">Multi-Website</span>
+            </div>
+            <p class="text-xs text-slate-400">Ideal untuk bisnis berkembang dengan banyak landing page dan website.</p>
+            <div class="text-3xl font-extrabold text-white font-mono">
+              Rp 299.000 <span class="text-xs font-normal text-slate-500">/ bulan</span>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>0% MDR Fee</strong> per transaksi</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Hingga <strong>5 Website / Aplikasi</strong></span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>High-Speed Polling (5 detik)</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Signed HMAC Webhooks & Retry Queue</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Plugin WooCommerce & Script PHP</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Priority Support WhatsApp 24/7</span></li>
+            </ul>
+          </div>
+          <button onclick="openCheckoutModal('SaaS Pro Hub - Rp 299.000/bln')" class="w-full py-3 bg-brand-purple hover:bg-brand-darkPurple text-white font-bold rounded-xl text-xs shadow-lg shadow-brand-purple/30 transition">
+            Langganan Paket Pro
+          </button>
+        </div>
+
+        <!-- Scale Enterprise SaaS -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-white">Scale Enterprise</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">Volume Tinggi</span>
+            </div>
+            <p class="text-xs text-slate-400">Untuk perusahaan e-commerce & aplikasi dengan ribuan transaksi per hari.</p>
+            <div class="text-3xl font-extrabold text-white font-mono">
+              Rp 699.000 <span class="text-xs font-normal text-slate-500">/ bulan</span>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>Unlimited Website</strong> & Platform</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Dedicated Worker & Custom Domain</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Multi-Merchant QRIS Load Balancing</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Audit Log ACID & Custom Webhook Events</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Dedicated Account Manager</span></li>
+            </ul>
+          </div>
+          <button onclick="openCheckoutModal('SaaS Enterprise - Rp 699.000/bln')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition">
+            Konsultasi Enterprise
+          </button>
+        </div>
+
+      </div>
+
+      <!-- SOURCE CODE LICENSED PRICING CARDS (HIDDEN BY DEFAULT) -->
+      <div id="pricingSourceGrid" class="hidden grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        
+        <!-- Developer Single License -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-bold text-white">Developer License</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">Sekali Bayar (Lifetime)</span>
+            </div>
+            <p class="text-xs text-slate-400">Source code lengkap untuk di-host di 1 VPS pribadi milik Anda sendiri.</p>
+            <div class="text-3xl font-extrabold text-white font-mono">
+              Rp 1.490.000 <span class="text-xs font-normal text-slate-500">/ Sekali Bayar</span>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>Full Source Code Node.js</strong> (Unobfuscated backend)</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Dual Provider GoPay & ShopeePay Partner</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Engine EMVCo QRIS Dynamic Generator (CRC16)</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Smart 3-digit Unique Code Algorithm</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Panduan Deploy Lengkap (Docker & Linux Systemd)</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Akses Update Repo Git selama 1 Tahun</span></li>
+            </ul>
+          </div>
+          <button onclick="openCheckoutModal('Source Code Developer - Rp 1.490.000 (Lifetime)')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition">
+            Beli Developer License
+          </button>
+        </div>
+
+        <!-- Agency Whitelabel License (Featured) -->
+        <div class="bg-gradient-to-b from-brand-card to-slate-900 border-2 border-brand-purple rounded-3xl p-8 space-y-6 flex flex-col justify-between relative shadow-stripe shadow-brand-purple/20">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-purple text-white shadow-lg shadow-brand-purple/50">
+            Rekomendasi Software House
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-bold text-white">Agency Whitelabel License</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-purple/20 text-indigo-300 border border-brand-purple/30">Unlimited Rebrand</span>
+            </div>
+            <p class="text-xs text-slate-400">Hak komersial penuh untuk rebrand, jual kembali, atau pasang di puluhan server klien tanpa royalti.</p>
+            <div class="text-3xl font-extrabold text-white font-mono">
+              Rp 3.490.000 <span class="text-xs font-normal text-slate-500">/ Sekali Bayar</span>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>100% Full Unencrypted Source Code</strong></span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span><strong>Hak Whitelabel:</strong> Ganti nama, logo, & brand sesuka hati</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Bebas instalasi di <strong>Unlimited VPS / Server Klien</strong></span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Bebas jual kembali sebagai layanan SaaS Anda sendiri</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Multi-Tenant Hub V2 + REST API OpenAPI 3.0</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Konsultasi Teknis & Dibantu Setup Awal via Remote</span></li>
+              <li class="flex items-center space-x-2.5"><i class="fa-solid fa-check text-emerald-400"></i><span>Akses Update Repo Git Seumur Hidup (Lifetime)</span></li>
+            </ul>
+          </div>
+          <button onclick="openCheckoutModal('Agency Whitelabel License - Rp 3.490.000 (Lifetime Unlimited)')" class="w-full py-3 bg-brand-purple hover:bg-brand-darkPurple text-white font-bold rounded-xl text-xs shadow-lg shadow-brand-purple/30 transition">
+            Dapatkan Lisensi Whitelabel
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DETAILED FEATURE COMPARISON TABLE -->
+  <section id="features" class="py-24 bg-slate-950 border-t border-slate-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3">
+        <h2 class="text-xs uppercase font-extrabold tracking-widest text-brand-purple">Perbandingan Lengkap</h2>
+        <h3 class="text-3xl font-extrabold text-white">Mengapa BionPay Unggul Mutlak?</h3>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[11px]">
+              <th class="py-4 px-4 w-1/3">Fitur & Parameter</th>
+              <th class="py-4 px-4 text-center">BionPay Gateway</th>
+              <th class="py-4 px-4 text-center text-slate-500">Gateway Konvensional</th>
+              <th class="py-4 px-4 text-center text-slate-500">Robot Web Scraper Bank</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Biaya MDR Transaksi</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">0% (Gratis Selamanya)</td>
+              <td class="py-4 px-4 text-center text-rose-400">0.7% s/d 1.5%</td>
+              <td class="py-4 px-4 text-center">0%</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Waktu Pencairan Dana</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">Detik itu juga (Realtime)</td>
+              <td class="py-4 px-4 text-center text-rose-400">H+1 s/d H+3 Hari Kerja</td>
+              <td class="py-4 px-4 text-center">Detik itu juga</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Kepatuhan Standar QRIS</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">EMVCo Resmi (Tag 54 & CRC16)</td>
+              <td class="py-4 px-4 text-center text-emerald-400">EMVCo Resmi</td>
+              <td class="py-4 px-4 text-center text-rose-400">Manual / Rentan Gagal</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Risiko Akun Diblokir Bank</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">Sangat Aman (Merchant Resmi)</td>
+              <td class="py-4 px-4 text-center text-slate-400">Aman</td>
+              <td class="py-4 px-4 text-center text-rose-400 font-bold">Tinggi (Sering Diblokir BCA/Mandiri)</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Dukungan Multi-Website Hub</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">Tersedia (Multi-Tenant Hub)</td>
+              <td class="py-4 px-4 text-center">Tersedia</td>
+              <td class="py-4 px-4 text-center text-rose-400">Tidak Ada</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-semibold text-white">Tanda Tangan Webhook (Security)</td>
+              <td class="py-4 px-4 text-center text-emerald-400 font-bold bg-emerald-500/5">HMAC-SHA256 Signed</td>
+              <td class="py-4 px-4 text-center text-emerald-400">HMAC-SHA256</td>
+              <td class="py-4 px-4 text-center text-rose-400">Plain / Rawan Spoofing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section id="faq" class="py-24 bg-brand-surface relative border-t border-slate-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3">
+        <h2 class="text-xs uppercase font-extrabold tracking-widest text-brand-purple">Pertanyaan Umum</h2>
+        <h3 class="text-3xl font-extrabold text-white">Frequently Asked Questions</h3>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        
+        <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer font-bold text-white">
+            <span>Apakah BionPay legal dan aman digunakan?</span>
+            <span class="ml-4 shrink-0 text-slate-400 group-open:rotate-180 transition"><i class="fa-solid fa-chevron-down"></i></span>
+          </summary>
+          <div class="mt-4 text-slate-400 leading-relaxed space-y-2">
+            <p>Sangat legal dan aman. BionPay tidak melakukan reverse-engineering ilegal ataupun membobol sistem perbankan. BionPay bekerja membaca data transaksi dari akun merchant resmi Anda sendiri (GoBiz / ShopeePay Partner) dan mengenerate QRIS dinamis berstandar nasional EMVCo ASPI.</p>
+          </div>
+        </details>
+
+        <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer font-bold text-white">
+            <span>Apa syarat untuk menggunakan BionPay?</span>
+            <span class="ml-4 shrink-0 text-slate-400 group-open:rotate-180 transition"><i class="fa-solid fa-chevron-down"></i></span>
+          </summary>
+          <div class="mt-4 text-slate-400 leading-relaxed">
+            <p>Anda hanya perlu memiliki salah satu atau kedua akun merchant berikut:</p>
+            <ol class="list-decimal pl-5 mt-2 space-y-1">
+              <li>Akun <strong>GoBiz (GoPay Merchant)</strong> yang aktif dan memiliki QRIS statis di aplikasi.</li>
+              <li>Akun <strong>ShopeePay Partner</strong> aktif.</li>
+            </ol>
+            <p class="mt-2">Jika Anda memilih model Source Code, Anda memerlukan 1 VPS Linux (RAM minimal 512MB atau 1GB) dengan Node.js terpasang.</p>
+          </div>
+        </details>
+
+        <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer font-bold text-white">
+            <span>Bagaimana jika pembeli bayar menggunakan Bank BCA, Mandiri, atau OVO?</span>
+            <span class="ml-4 shrink-0 text-slate-400 group-open:rotate-180 transition"><i class="fa-solid fa-chevron-down"></i></span>
+          </summary>
+          <div class="mt-4 text-slate-400 leading-relaxed">
+            <p>Tetap 100% bisa! Sesuai regulasi Bank Indonesia, seluruh QRIS bersifat inter-operable. Pembeli dapat memindai QRIS BionPay menggunakan aplikasi m-banking bank manapun (BCA, Mandiri, BRI, BNI, Jago, dll) serta e-wallet manapun (OVO, DANA, LinkAja). Saldo akan langsung mengalir ke merchant GoBiz/ShopeePay Anda.</p>
+          </div>
+        </details>
+
+        <details class="group bg-slate-900 border border-slate-800 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer font-bold text-white">
+            <span>Jika saya beli Source Code, apakah ada biaya langganan bulanan lagi?</span>
+            <span class="ml-4 shrink-0 text-slate-400 group-open:rotate-180 transition"><i class="fa-solid fa-chevron-down"></i></span>
+          </summary>
+          <div class="mt-4 text-slate-400 leading-relaxed">
+            <p><strong>Tidak ada sama sekali!</strong> Pembelian Source Code bersifat <em>One-Time Payment (Lifetime)</em>. Anda memegang source code penuh, dapat dijalankan di VPS Anda sendiri tanpa ketergantungan pada server kami, dan tanpa royalti per transaksi.</p>
+          </div>
+        </details>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FINAL CTA STRIP -->
+  <section class="py-20 bg-gradient-to-tr from-brand-purple/20 via-brand-surface to-brand-navy border-t border-slate-800 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+        Siap Bebaskan Bisnis Anda dari Biaya MDR?
+      </h2>
+      <p class="text-base text-slate-400 max-w-2xl mx-auto">
+        Bergabunglah bersama puluhan pemilik toko online, agency, dan software developer yang telah menghemat jutaan rupiah setiap bulan bersama BionPay.
+      </p>
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#pricing" class="px-8 py-4 bg-brand-purple hover:bg-brand-darkPurple text-white font-bold rounded-2xl shadow-xl shadow-brand-purple/40 hover:scale-105 transition flex items-center space-x-2 text-sm">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span>Dapatkan BionPay Sekarang</span>
+        </a>
+        <a href="https://wa.me/6281227717669?text=Halo%20BionPay,%20saya%20tertarik%20tanya%20tentang%20SaaS%20dan%20Source%20Code" target="_blank" class="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl border border-slate-700 transition flex items-center space-x-2 text-sm">
+          <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+          <span>Chat WhatsApp Konsultasi</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-12 bg-slate-950 border-t border-slate-900 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-purple flex items-center justify-center text-white font-bold">
+          <i class="fa-solid fa-bolt-lightning text-sm"></i>
+        </div>
+        <span class="font-extrabold text-slate-300 text-sm">BionPay Gateway</span>
+        <span>&copy; 2026 Bion Digital Ecosystem. All rights reserved.</span>
+      </div>
+
+      <div class="flex items-center space-x-6">
+        <a href="#hero" class="hover:text-slate-300">Kembali ke Atas</a>
+        <a href="#pricing" class="hover:text-slate-300">Lisensi & Harga</a>
+        <a href="https://orbit.bion.id/docs" target="_blank" class="hover:text-slate-300">Dokumentasi API</a>
+        <a href="https://wa.me/6281227717669" target="_blank" class="text-emerald-400 hover:underline">Hubungi Kami (WhatsApp)</a>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- CHECKOUT / INQUIRY MODAL -->
+  <div id="checkoutModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+      
+      <button onclick="closeCheckoutModal()" class="absolute right-5 top-5 text-slate-500 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="space-y-1">
+        <h3 class="text-xl font-bold text-white">Konfirmasi Pemesanan</h3>
+        <p class="text-xs text-slate-400">Pilihan paket Anda siap diproses via WhatsApp Sales resmi:</p>
+      </div>
+
+      <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+        <span class="text-[11px] text-slate-400 font-semibold uppercase">Paket yang Dipilih:</span>
+        <div id="modalSelectedPackage" class="text-base font-bold text-brand-purple font-mono">-</div>
+      </div>
+
+      <form onsubmit="submitCheckoutWhatsApp(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Nama Lengkap / Bisnis Anda</label>
+          <input type="text" id="custName" required placeholder="Contoh: Budi Santoso (PT Maju Jaya)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Nomor WhatsApp Aktif</label>
+          <input type="tel" id="custPhone" required placeholder="0812xxxxxxxx" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Website / Platform yang Ingin Dihubungkan</label>
+          <input type="text" id="custSite" placeholder="Contoh: tokobaju.com / WordPress / Custom App" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-purple">
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-bold rounded-xl text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2">
+          <i class="fa-brands fa-whatsapp text-lg"></i>
+          <span>Lanjutkan ke WhatsApp Sales</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // 1. MDR Savings Calculator
+    const slider = document.getElementById('omsetSlider');
+    const sliderVal = document.getElementById('sliderValue');
+    const pgFeeVal = document.getElementById('pgFee');
+    const savingsVal = document.getElementById('annualSavings');
+
+    function formatRp(num) {
+      return 'Rp ' + num.toLocaleString('id-ID');
+    }
+
+    function updateCalculator() {
+      const omset = parseInt(slider.value);
+      sliderVal.textContent = formatRp(omset);
+
+      // Fee PG konvensional (0.7% MDR)
+      const monthlyFee = omset * 0.007;
+      pgFeeVal.textContent = formatRp(monthlyFee) + ' / bln';
+
+      // Penghematan setahun
+      const annual = monthlyFee * 12;
+      savingsVal.textContent = formatRp(annual) + ' / thn';
+    }
+
+    slider.addEventListener('input', updateCalculator);
+    updateCalculator();
+
+    // 2. Pricing Switcher (SaaS vs Source Code)
+    function switchPricing(type) {
+      const btnSaas = document.getElementById('btnPriceSaas');
+      const btnSource = document.getElementById('btnPriceSource');
+      const gridSaas = document.getElementById('pricingSaasGrid');
+      const gridSource = document.getElementById('pricingSourceGrid');
+
+      if (type === 'saas') {
+        btnSaas.className = 'px-6 py-2.5 rounded-xl font-bold bg-brand-purple text-white shadow-md transition';
+        btnSource.className = 'px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-white transition';
+        gridSaas.classList.remove('hidden');
+        gridSource.classList.add('hidden');
+      } else {
+        btnSource.className = 'px-6 py-2.5 rounded-xl font-bold bg-brand-purple text-white shadow-md transition';
+        btnSaas.className = 'px-6 py-2.5 rounded-xl font-bold text-slate-400 hover:text-white transition';
+        gridSource.classList.remove('hidden');
+        gridSaas.classList.add('hidden');
+      }
+    }
+
+    // 3. Demo QRIS Simulator
+    let currentProvider = 'AUTO';
+    function setDemoProvider(p) {
+      currentProvider = p;
+      ['btnAuto', 'btnGopay', 'btnShopee'].forEach(id => {
+        document.getElementById(id).className = 'py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-bold hover:text-white transition';
+      });
+      if (p === 'AUTO') {
+        document.getElementById('btnAuto').className = 'py-2.5 px-3 rounded-xl border border-brand-purple bg-brand-purple/20 text-white font-bold transition';
+      } else if (p === 'GOPAY') {
+        document.getElementById('btnGopay').className = 'py-2.5 px-3 rounded-xl border border-[#00AED9] bg-[#00AED9]/20 text-[#00AED9] font-bold transition';
+      } else {
+        document.getElementById('btnShopee').className = 'py-2.5 px-3 rounded-xl border border-[#EE4D2D] bg-[#EE4D2D]/20 text-[#EE4D2D] font-bold transition';
+      }
+    }
+
+    function generateDemoQR() {
+      const prod = document.getElementById('demoProductName').value || 'Order Produk';
+      const amt = parseInt(document.getElementById('demoAmount').value) || 50000;
+      const unique = Math.floor(Math.random() * 899) + 100;
+      const total = amt + unique;
+
+      document.getElementById('dispProductName').textContent = prod;
+      document.getElementById('dispAmount').textContent = formatRp(total);
+      document.getElementById('dispUniqueCode').textContent = `+Rp ${unique}`;
+      document.getElementById('dispProviderBadge').textContent = `Dynamic QRIS (${currentProvider})`;
+
+      // Reload QR visually
+      const qrImg = document.getElementById('demoQrImg');
+      qrImg.style.opacity = '0.3';
+      setTimeout(() => {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BIONPAY-${currentProvider}-${total}-${Date.now()}`;
+        qrImg.style.opacity = '1';
+      }, 300);
+    }
+
+    // 4. Code Snippet Switcher
+    const codeSnippets = {
+      curl: {
+        title: 'POST /v1/payments (Create Dynamic QRIS)',
+        code: `curl -X POST https://api.yourdomain.com/v1/payments \\
+  -H "Authorization: Bearer bp_live_9d82138abf0192e" \\
+  -H "Idempotency-Key: trx_order_99012" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "amount": 150000,
+    "order_id": "INV-2026-001",
+    "customer_name": "Andika Bion",
+    "customer_email": "customer@bion.id",
+    "provider": "AUTO"
+  }'`
+      },
+      node: {
+        title: 'Node.js (Express / Axios)',
+        code: `const axios = require('axios');
+
+async function createPayment() {
+  const response = await axios.post('https://api.yourdomain.com/v1/payments', {
+    amount: 150000,
+    order_id: 'INV-2026-001',
+    customer_name: 'Andika Bion',
+    provider: 'AUTO'
+  }, {
+    headers: {
+      'Authorization': 'Bearer bp_live_9d82138abf0192e',
+      'Idempotency-Key': 'key_' + Date.now()
+    }
+  });
+
+  console.log('Checkout URL:', response.data.data.checkout_url);
+  console.log('Raw QR Payload:', response.data.data.qr_string);
+}`
+      },
+      php: {
+        title: 'PHP (Laravel / Guzzle)',
+        code: `<?php
+use Illuminate\\Support\\Facades\\Http;
+
+$response = Http::withToken('bp_live_9d82138abf0192e')
+    ->withHeaders(['Idempotency-Key' => 'order_' . $order->id])
+    ->post('https://api.yourdomain.com/v1/payments', [
+        'amount' => 150000,
+        'order_id' => 'INV-' . $order->id,
+        'customer_name' => $order->customer_name,
+        'provider' => 'AUTO'
+    ]);
+
+if ($response->successful()) {
+    $payment = $response->json('data');
+    return redirect($payment['checkout_url']);
+}`
+      },
+      webhook: {
+        title: 'Signed Webhook HMAC-SHA256 Verification',
+        code: `const crypto = require('crypto');
+
+app.post('/webhook/bionpay', (req, res) => {
+  const signature = req.headers['x-bionpay-signature'];
+  const secret = 'whsec_8849182aef9120';
+  
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
+
+  if (signature !== expectedSig) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const { event, data } = req.body;
+  if (event === 'payment.settled') {
+    console.log(\`Pesanan \${data.order_id} LUNAS via \${data.provider}!\`);
+    // Lakukan pemenuhan pesanan otomatis di sini
+  }
+
+  res.json({ received: true });
+});`
+      }
+    };
+
+    function switchCodeTab(lang) {
+      ['curl', 'node', 'php', 'webhook'].forEach(l => {
+        document.getElementById(`tabBtn-${l}`).className = 'px-3.5 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition';
+      });
+      document.getElementById(`tabBtn-${lang}`).className = 'px-3.5 py-1.5 rounded-lg font-bold bg-brand-purple text-white transition';
+      
+      const snippet = codeSnippets[lang];
+      document.getElementById('codeSnippetTitle').textContent = snippet.title;
+      document.getElementById('codeSnippetBox').textContent = snippet.code;
+    }
+
+    function copyCode() {
+      const code = document.getElementById('codeSnippetBox').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => btn.textContent = 'Salin Kode', 2000);
+      });
+    }
+
+    // 5. Checkout Modal & WhatsApp Redirection
+    let activePkg = '';
+    function openCheckoutModal(pkgName) {
+      activePkg = pkgName;
+      document.getElementById('modalSelectedPackage').textContent = pkgName;
+      document.getElementById('checkoutModal').classList.remove('hidden');
+      document.getElementById('checkoutModal').classList.add('flex');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').classList.add('hidden');
+      document.getElementById('checkoutModal').classList.remove('flex');
+    }
+
+    function submitCheckoutWhatsApp(e) {
+      e.preventDefault();
+      const name = document.getElementById('custName').value;
+      const phone = document.getElementById('custPhone').value;
+      const site = document.getElementById('custSite').value;
+
+      const text = `Halo Tim Sales BionPay, saya ingin memesan lisensi BionPay:%0A%0A` +
+        `📦 *Paket:* ${encodeURIComponent(activePkg)}%0A` +
+        `👤 *Nama:* ${encodeURIComponent(name)}%0A` +
+        `📱 *No HP/WA:* ${encodeURIComponent(phone)}%0A` +
+        `🌐 *Website/App:* ${encodeURIComponent(site || '-')}%0A%0A` +
+        `Mohon informasi rekening pembayaran dan langkah aktivasinya. Terima kasih!`;
+
+      window.open(`https://wa.me/6281227717669?text=${text}`, '_blank');
+      closeCheckoutModal();
+    }
+  </script>
+
+</body>
+</html>
